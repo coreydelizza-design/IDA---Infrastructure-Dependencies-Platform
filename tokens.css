@@ -1,0 +1,67 @@
+:root {
+  color-scheme: dark;
+  --app-width: 1672px;
+  --app-height: 941px;
+  --topbar-height: 51px;
+  --sidebar-width: 204px;
+  --footer-height: 40px;
+  --detail-column-width: 500px;
+  --detail-pane-width: 480px;
+
+  --ink-000: #ffffff;
+  --ink-050: #f4f7fb;
+  --ink-100: #e7edf5;
+  --ink-200: #c9d3df;
+  --ink-300: #a8b5c5;
+  --ink-400: #8a9aad;
+  --ink-500: #6f8195;
+  --ink-600: #536579;
+
+  --navy-975: #000612;
+  --navy-950: #010817;
+  --navy-925: #020b19;
+  --navy-900: #04101f;
+  --navy-875: #051326;
+  --navy-850: #07172a;
+  --navy-825: #091a2e;
+  --navy-800: #0b1e33;
+  --navy-775: #0d2138;
+  --navy-750: #10243a;
+  --navy-725: #112841;
+  --navy-700: #132a43;
+  --navy-650: #17314d;
+
+  --border-hairline: #0e2136;
+  --border-subtle: #142a42;
+  --border-default: #1d3854;
+  --border-strong: #2a4b6e;
+
+  --blue-600: #276ad3;
+  --blue-500: #2f7df6;
+  --blue-400: #3f8cff;
+  --blue-300: #62a4ff;
+
+  --green-600: #2cb950;
+  --green-500: #58df6a;
+  --green-400: #69ec79;
+  --amber-600: #c28d12;
+  --amber-500: #f2bd24;
+  --red-600: #e54a42;
+  --red-500: #ff5b50;
+  --purple-500: #8a5cf6;
+  --cyan-500: #3b9cf3;
+
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  --shadow-panel: 0 8px 24px rgba(0, 0, 0, 0.18);
+  --shadow-focus: 0 0 0 1px rgba(63, 140, 255, 0.65);
+  --overlay-card: linear-gradient(
+    180deg,
+    rgba(2, 10, 22, 0.03) 0%,
+    rgba(3, 12, 25, 0.28) 36%,
+    rgba(3, 12, 25, 0.94) 100%
+  );
+}
