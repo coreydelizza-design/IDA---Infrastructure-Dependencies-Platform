@@ -1,0 +1,51 @@
+IDA — Infrastructure Dependency Assurance
+Complete GitHub Repository Verification
+Date: 2026-07-16
+
+PACKAGE CONTENT
+PASS  Complete React/TypeScript/Vite application source included
+PASS  8 site-card image assets included
+PASS  Approved 1672x941 product reference included
+PASS  Current 1672x941 Playwright regression baseline included
+PASS  UI_LOCK.md and root AGENTS.md guardrails included
+PASS  Codex handoff, first task, and phased prompt sequence included
+PASS  PostgreSQL/PostGIS schema starter included
+PASS  OpenAPI 3.1 contract starter included
+PASS  GitHub quality, E2E, visual, and Pages workflows included
+PASS  Vercel deployment configuration included
+PASS  node_modules, dist, Playwright reports, and test output excluded from archive
+
+CLEAN VERIFICATION
+PASS  npm ci
+PASS  npm audit: 0 vulnerabilities
+PASS  repository handoff verification: 24 required files
+PASS  approved-reference SHA-256 lock
+      ed2410f1d08d17d34dd5770c65a492d402a6001cc7f9ac03261a2e65654be7ae
+PASS  reference image dimensions: 1672x941
+PASS  regression image dimensions: 1672x941
+PASS  8 required site-image assets present and non-empty
+PASS  locked shell geometry and semantic palette tokens present
+PASS  TypeScript strict typecheck
+PASS  Vitest: 1 file, 2 tests
+PASS  Vite production build
+PASS  local HTTP application smoke test on port 4173
+
+ENVIRONMENT-LIMITED CHECK
+Playwright E2E and visual tests were invoked against the installed system Chromium.
+The browser was blocked from navigating to the local loopback server with:
+  net::ERR_BLOCKED_BY_ADMINISTRATOR
+This is an execution-environment browser policy, not an application assertion or
+build failure. The complete tests and baseline are included and are configured to
+run in GitHub Actions with Playwright-managed Chromium.
+
+VISUAL AUTHORITY
+The product authority remains docs/reference-site-inventory.png. It is not used as
+a page background. The application is composed from React components, typed data,
+CSS geometry, semantic tokens, and individual site imagery. A reference checksum,
+fixed viewport, visual snapshot, UI lock, and Codex guardrails prevent accidental
+redesign or aesthetic loss.
+
+BOUNDARY
+Ready for a new GitHub repository, Codex continuation, prototype deployment, and
+controlled demonstrations. Not production-authorized for enterprise/customer data,
+carrier credentials, signed LOAs, or legal DORA/ICT compliance determinations.
