@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRegistryState, type WorkspacePage } from "./application/useRegistryState";
 import { AddSiteModal } from "./components/AddSiteModal";
 import { AppFooter } from "./components/AppFooter";
@@ -39,6 +39,26 @@ const pageTitles: Record<WorkspacePage, string> = {
 export default function App() {
   const registry = useRegistryState();
   const [addSiteOpen, setAddSiteOpen] = useState(false);
+
+  // Uniformly scale the locked 1672x941 console to fit the viewport while
+  // preserving its exact aspect ratio (see docs/UI_LOCK.md). At the canonical
+  // 1672x941 viewport the factor is 1, so the visual baseline is unchanged.
+  useEffect(() => {
+    const APP_WIDTH = 1672;
+    const APP_HEIGHT = 941;
+    const root = document.documentElement;
+    const applyScale = () => {
+      const scale = Math.min(window.innerWidth / APP_WIDTH, window.innerHeight / APP_HEIGHT);
+      root.style.setProperty("--ui-scale", String(scale));
+    };
+    applyScale();
+    window.addEventListener("resize", applyScale);
+    window.addEventListener("orientationchange", applyScale);
+    return () => {
+      window.removeEventListener("resize", applyScale);
+      window.removeEventListener("orientationchange", applyScale);
+    };
+  }, []);
 
   const showSiteWorkspace = registry.activePage === "sites";
 

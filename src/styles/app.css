@@ -11,11 +11,24 @@ body,
 }
 
 html {
+  overflow: hidden;
+  background: var(--navy-950);
+}
+
+/*
+ * Viewport frame: centers the locked design canvas and lets .app-shell scale
+ * uniformly to fit any device while preserving the approved 1672x941 aspect
+ * ratio. See docs/UI_LOCK.md — composition, spacing, and typography are
+ * unchanged; only the whole console is scaled as one unit.
+ */
+#root {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
   background: var(--navy-950);
 }
 
 body {
-  min-width: 1180px;
   overflow: hidden;
   color: var(--ink-100);
   background: var(--navy-900);
@@ -112,9 +125,14 @@ select {
   display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   grid-template-rows: var(--topbar-height) minmax(0, 1fr) var(--footer-height);
-  width: 100vw;
-  height: 100vh;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--app-width);
+  height: var(--app-height);
   overflow: hidden;
+  transform: translate(-50%, -50%) scale(var(--ui-scale, 1));
+  transform-origin: center center;
   background:
     radial-gradient(circle at 58% 5%, rgba(25, 63, 102, 0.13), transparent 40%),
     linear-gradient(180deg, var(--navy-875) 0%, #061528 100%);
@@ -2662,66 +2680,13 @@ select {
   font-size: 8px;
 }
 
-/* Responsive behavior preserves canonical desktop baseline */
-@media (max-width: 1450px) {
-  :root {
-    --detail-column-width: 420px;
-    --detail-pane-width: 400px;
-  }
-
-  .primary-nav {
-    margin-left: 15px;
-  }
-
-  .primary-nav button {
-    padding: 0 9px;
-  }
-
-  .site-collection-frame,
-  .portfolio-summary {
-    max-width: calc(100% - 10px);
-  }
-
-  .filter-select.location-filter,
-  .filter-select.country-filter {
-    display: none;
-  }
-
-  .overview-top-grid {
-    grid-template-columns: 1fr 1.25fr;
-  }
-
-  .scoring-basis-card {
-    display: none;
-  }
-}
-
-@media (max-width: 1200px) {
-  body {
-    min-width: 900px;
-  }
-
-  :root {
-    --sidebar-width: 184px;
-  }
-
-  .workspace.with-detail {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .detail-pane {
-    position: absolute;
-    top: 0;
-    right: 0;
-    z-index: 40;
-    width: 480px;
-  }
-
-  .site-collection-frame,
-  .portfolio-summary {
-    width: calc(100% - 12px);
-  }
-}
+/*
+ * No viewport-width breakpoints: the approved composition is locked
+ * (see docs/UI_LOCK.md) and rendered at its canonical size, then scaled as a
+ * single unit to fit any device (see #root / .app-shell and the --ui-scale
+ * hook in App.tsx). Reflowing at breakpoints would alter the locked layout, so
+ * device adaptation is handled purely by uniform scaling.
+ */
 
 @media (prefers-reduced-motion: reduce) {
   *,
