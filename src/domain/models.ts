@@ -1,3 +1,11 @@
+// Presentation-facing types consumed by the approved UI components. The rich
+// persisted aggregates live in their own modules (see index.ts); a presenter
+// maps a rich Site aggregate into the `Site` view type below so the approved
+// card/inspector layout does not need to be rebuilt.
+
+import type { AssessmentStatus, RegistryState } from "./siteStates";
+import type { ServiceAssuranceState, ServiceCriticality } from "./services";
+
 export type HealthBand = "excellent" | "good" | "at-risk" | "critical";
 export type EvidenceBadge =
   | "evidence-verified"
@@ -22,6 +30,8 @@ export interface ScoreSnapshot {
   assessedAt: string;
   singleSiteApproved: boolean;
   technicalGapRetained: boolean;
+  /** Provisional when the score does not come from stored control results. */
+  provisional: boolean;
 }
 
 export interface ResilienceIndicator {
@@ -32,12 +42,12 @@ export interface ResilienceIndicator {
   verification: VerificationState;
 }
 
-export interface CriticalService {
+/** Presentation view of a critical-service dependency (no live status). */
+export interface CardCriticalService {
   id: string;
   name: string;
-  status: "up" | "degraded" | "down";
-  rtoMinutes: number;
-  rpoMinutes: number;
+  criticality: ServiceCriticality;
+  assuranceState: ServiceAssuranceState;
 }
 
 export interface SiteRisk {
@@ -48,16 +58,14 @@ export interface SiteRisk {
   control?: string;
 }
 
-export interface CarrierConnection {
+/** Presentation view of a connectivity dependency for the inspector. */
+export interface CardCarrierConnection {
   id: string;
   contractedCarrier: string;
   underlyingCarrier: string;
   role: "primary" | "secondary" | "tertiary";
   serviceType: string;
   circuitId: string;
-  accessProvider: string;
-  bandwidth: string;
-  entrance: string;
   routeVerification: VerificationState;
 }
 
@@ -75,6 +83,9 @@ export interface ActivityRecord {
   relativeTime: string;
 }
 
+/** Architecture-assurance summary surfaced in the UI. */
+export type PublicationState = "insufficient-assessment" | "provisional" | "publishable" | "superseded";
+
 export interface Site {
   id: string;
   code: string;
@@ -89,23 +100,32 @@ export interface Site {
   address: string;
   timezone: string;
   owner: string;
-  online: boolean;
   favorite: boolean;
   evidenceBadge: EvidenceBadge;
   imageAsset: string;
   score: ScoreSnapshot;
-  carrierConnections: CarrierConnection[];
+  carrierConnections: CardCarrierConnection[];
   dependencyCount: number;
   risks: SiteRisk[];
   cardOpenRiskCount?: number;
-  criticalServices: CriticalService[];
+  criticalServices: CardCriticalService[];
   resilienceIndicators: ResilienceIndicator[];
   compliance: ComplianceMapping[];
   evidenceConfidence: EvidenceConfidence;
   evidenceConfidencePercent: number;
-  nextReview: string;
   activity: ActivityRecord[];
   tags: string[];
+  // Phase 1 assurance/registry fields
+  registryState: RegistryState;
+  assessmentStatus: AssessmentStatus;
+  completenessPercent: number;
+  lastVerifiedAt: string;
+  nextReviewAt: string;
+  pendingEnterpriseRequestCount: number;
+  pendingCarrierRequestCount: number;
+  unresolvedDependencyCount: number;
+  openDataGapCount: number;
+  publicationState: PublicationState;
 }
 
 export interface PortfolioSummary {
@@ -132,27 +152,4 @@ export interface ScoringProfile {
   archetype: string;
   redundancyExpectation: "required" | "acceptable-single" | "not-applicable";
   criticalCaps: Array<{ controlId: string; maxScore: number }>;
-}
-
-export interface LoaRecord {
-  id: string;
-  enterprise: string;
-  carrier: string;
-  scope: string[];
-  status: "draft" | "pending-signature" | "active" | "expired" | "revoked";
-  effectiveDate: string;
-  expirationDate: string;
-  authorizedActions: string[];
-  siteCount: number;
-}
-
-export interface CarrierRequest {
-  id: string;
-  loaId: string;
-  siteId: string;
-  carrier: string;
-  requestType: "circuit-inventory" | "route-diversity" | "demarc-evidence" | "service-record";
-  status: "draft" | "sent" | "carrier-review" | "responded" | "verified" | "closed";
-  dueDate: string;
-  evidenceCount: number;
 }

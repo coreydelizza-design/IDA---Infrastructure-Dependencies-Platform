@@ -1,12 +1,14 @@
 import { Plus, X } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
-import type { Site } from "../domain/models";
+import { useRegistry } from "../application/registryContext";
 import { computeResilienceScore } from "../domain/scoring";
+import { deriveRegistrationDataGaps } from "../domain/assurance";
+import type { SiteRecord } from "../domain";
 
 interface AddSiteModalProps {
   open: boolean;
   onClose: () => void;
-  onCreate: (site: Site) => void;
+  onCreate: (record: SiteRecord) => void;
 }
 
 const typeOptions = [
@@ -31,6 +33,7 @@ function assetForType(type: string): string {
 }
 
 export function AddSiteModal({ open, onClose, onCreate }: AddSiteModalProps) {
+  const registry = useRegistry();
   const [code, setCode] = useState("BR-1002");
   const [name, setName] = useState("Berlin");
   const [city, setCity] = useState("Berlin");
@@ -39,6 +42,8 @@ export function AddSiteModal({ open, onClose, onCreate }: AddSiteModalProps) {
   const [type, setType] = useState("Branch Office");
   const [carrierCount, setCarrierCount] = useState(1);
   const [singleSiteApproved, setSingleSiteApproved] = useState(false);
+  const [requireEnterpriseFollowUp, setRequireEnterpriseFollowUp] = useState(true);
+  const [requireCarrierConfirmation, setRequireCarrierConfirmation] = useState(true);
 
   const previewScore = useMemo(() => {
     const profileRequiresDiversity = type.includes("Data Center") || type.includes("Hub") || type.includes("Contact");
@@ -59,6 +64,7 @@ export function AddSiteModal({ open, onClose, onCreate }: AddSiteModalProps) {
       },
       singleSiteApproved,
       assessedAt: "Just now",
+      provisional: true,
     });
   }, [carrierCount, singleSiteApproved, type]);
 
@@ -66,54 +72,88 @@ export function AddSiteModal({ open, onClose, onCreate }: AddSiteModalProps) {
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const id = `site-${code.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
-    const connections = Array.from({ length: carrierCount }, (_, index) => ({
-      id: `${id}-circuit-${index + 1}`,
-      contractedCarrier: index === 0 ? "Carrier pending" : `Secondary carrier ${index}`,
-      underlyingCarrier: "Verification pending",
-      role: index === 0 ? "primary" as const : index === 1 ? "secondary" as const : "tertiary" as const,
-      serviceType: "DIA",
-      circuitId: "Pending",
-      accessProvider: "Pending",
-      bandwidth: "Pending",
-      entrance: "Unknown",
-      routeVerification: "unknown" as const,
-    }));
+    const suffix = code.trim().toLowerCase().replaceAll(/[^a-z0-9]+/g, "-");
+    const id = `site-${suffix}-new`;
+    const engagementId = registry.currentEngagement?.id ?? "";
+    const createdAt = "Just now";
 
-    onCreate({
+    // Carrier/circuit identity is unknown at registration. Record data gaps —
+    // never fabricate carrier or circuit records.
+    const dataGaps = deriveRegistrationDataGaps({
+      siteId: id,
+      engagementId,
+      knownCarrierCount: carrierCount,
+      providedFields: {},
+      requireEnterpriseFollowUp,
+      requireCarrierConfirmation,
+      createdAt,
+    });
+    const enterpriseGaps = dataGaps.filter((g) => g.requestedFrom === "enterprise").length;
+    const carrierGaps = dataGaps.filter((g) => g.requestedFrom === "carrier").length;
+
+    const record: SiteRecord = {
       id,
+      tenantId: registry.organization?.id ?? "",
+      enterpriseClientId: registry.currentEnterprise?.id ?? "",
+      engagementId,
       code: code.trim(),
       name: name.trim(),
-      type,
-      locationType: type,
-      criticality: type.includes("Data Center") ? "Tier I Mission Critical" : "Tier III Business Critical",
+      archetypeId: type,
+      primaryLocationType: type,
+      secondaryLocationTypes: [],
+      businessRoles: [],
+      networkRoles: [],
+      address: "Not yet provided",
       city: city.trim(),
+      stateProvince: "",
+      postalCode: "",
       countryCode: countryCode.trim().toUpperCase(),
       countryName: countryName.trim(),
+      latitude: null,
+      longitude: null,
+      timezone: "Not yet provided",
+      ownershipModel: "unknown",
+      occupancyModel: "unknown",
+      operatingHours: "Unknown",
+      userCount: null,
+      endpointCount: null,
+      businessCriticality: 3,
+      operationalDependency: 3,
+      safetyImpact: 1,
+      regulatoryScope: [],
+      registryState: "draft",
+      assessmentStatus: "data-collection",
+      completenessPercent: 10,
+      lastVerifiedAt: "Not yet verified",
+      nextReviewAt: "in 30 days",
+      consultantOwnerId: "user-consultant-1",
+      enterpriseOwnerContactId: null,
+      pendingEnterpriseRequestCount: requireEnterpriseFollowUp ? enterpriseGaps : 0,
+      pendingCarrierRequestCount: requireCarrierConfirmation ? carrierGaps : 0,
+      unresolvedDependencyCount: carrierCount,
+      openDataGapCount: dataGaps.length,
+      archivedAt: null,
+      createdAt,
+      updatedAt: createdAt,
+      version: 1,
       region: "Unassigned",
-      address: "Address pending verification",
-      timezone: "Pending",
-      owner: "Unassigned",
-      online: true,
+      criticalityLabel: type.includes("Data Center") ? "Tier I Mission Critical" : "Tier III Business Critical",
+      ownerLabel: "Not yet assigned",
       favorite: false,
       evidenceBadge: singleSiteApproved ? "single-site-acceptable" : null,
       imageAsset: assetForType(type),
       score: previewScore,
-      carrierConnections: connections,
-      dependencyCount: connections.length,
+      carrierConnections: [],
+      dependencyCount: 0,
       cardOpenRiskCount: carrierCount === 1 && !singleSiteApproved ? 1 : 0,
       risks: carrierCount === 1 && !singleSiteApproved
-        ? [{ id: `RSK-${Date.now().toString().slice(-4)}`, title: "Single carrier dependency", severity: "high", status: "open", control: "NET-DIV-01" }]
+        ? [{ id: `RSK-${suffix.slice(0, 4).toUpperCase()}`, title: "Single carrier dependency", severity: "high", status: "open", control: "NET-DIV-01" }]
         : [],
       criticalServices: [],
       resilienceIndicators: [
         { id: "power", label: "Power Resilience", value: "Assessment pending", state: "warning", verification: "unknown" },
         { id: "connectivity", label: "Connectivity Resilience", value: singleSiteApproved ? "Approved Single-Site" : carrierCount > 1 ? "Multi-Carrier" : "Single Carrier", state: singleSiteApproved ? "not-applicable" : carrierCount > 1 ? "pass" : "fail", verification: "unknown" },
         { id: "facility", label: "Facility Resilience", value: "Assessment pending", state: "warning", verification: "unknown" },
-        { id: "environment", label: "Environmental Controls", value: "Assessment pending", state: "warning", verification: "unknown" },
-        { id: "physical", label: "Physical Security", value: "Assessment pending", state: "warning", verification: "unknown" },
-        { id: "workforce", label: "Workforce Availability", value: "Assessment pending", state: "warning", verification: "unknown" },
-        { id: "cyber", label: "Cyber Resilience", value: "Assessment pending", state: "warning", verification: "unknown" },
         { id: "recovery", label: "Backup & Recovery", value: "Assessment pending", state: "warning", verification: "unknown" },
       ],
       compliance: [
@@ -122,10 +162,12 @@ export function AddSiteModal({ open, onClose, onCreate }: AddSiteModalProps) {
       ],
       evidenceConfidence: "low",
       evidenceConfidencePercent: 10,
-      nextReview: "in 30 days",
       activity: [{ id: `${id}-created`, action: "Site registered", actor: "AB", relativeTime: "Just now" }],
+      publicationState: "insufficient-assessment",
       tags: [type.toLowerCase().replaceAll(" ", "-"), "new-site", "evidence-pending"],
-    });
+    };
+
+    onCreate(record);
     onClose();
   }
 
@@ -133,7 +175,7 @@ export function AddSiteModal({ open, onClose, onCreate }: AddSiteModalProps) {
     <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <div className="add-site-modal" role="dialog" aria-modal="true" aria-labelledby="add-site-title">
         <div className="modal-heading">
-          <div><span className="modal-icon"><Plus size={18} /></span><div><h2 id="add-site-title">Register New Site</h2><p>Create a registry record and baseline scoring profile.</p></div></div>
+          <div><span className="modal-icon"><Plus size={18} /></span><div><h2 id="add-site-title">Register New Site</h2><p>Record known facts; unknowns become data gaps, not fabricated records.</p></div></div>
           <button type="button" onClick={onClose} aria-label="Close"><X size={18} /></button>
         </div>
         <form onSubmit={submit}>
@@ -144,13 +186,15 @@ export function AddSiteModal({ open, onClose, onCreate }: AddSiteModalProps) {
             <label><span>City</span><input required value={city} onChange={(event) => setCity(event.target.value)} /></label>
             <label><span>Country code</span><input required maxLength={2} value={countryCode} onChange={(event) => setCountryCode(event.target.value)} /></label>
             <label className="form-wide"><span>Country name</span><input required value={countryName} onChange={(event) => setCountryName(event.target.value)} /></label>
-            <label><span>Carrier count</span><input type="number" min={1} max={4} value={carrierCount} onChange={(event) => setCarrierCount(Number(event.target.value))} /></label>
+            <label><span>Known carrier count</span><input type="number" min={0} max={4} value={carrierCount} onChange={(event) => setCarrierCount(Number(event.target.value))} /></label>
             <label className="checkbox-field"><input type="checkbox" checked={singleSiteApproved} onChange={(event) => setSingleSiteApproved(event.target.checked)} /><span>Approved single-site design</span></label>
+            <label className="checkbox-field"><input type="checkbox" checked={requireEnterpriseFollowUp} onChange={(event) => setRequireEnterpriseFollowUp(event.target.checked)} /><span>Enterprise follow-up required</span></label>
+            <label className="checkbox-field"><input type="checkbox" checked={requireCarrierConfirmation} onChange={(event) => setRequireCarrierConfirmation(event.target.checked)} /><span>Carrier confirmation required</span></label>
           </div>
           <div className="score-preview">
-            <span>Baseline score</span>
+            <span>Provisional assurance</span>
             <strong className={`health-${previewScore.band}`}>{previewScore.score}</strong>
-            <p>{singleSiteApproved ? "The approved single-site pattern is not penalized." : "Unverified or required diversity gaps affect technical health."}</p>
+            <p>{singleSiteApproved ? "The approved single-site pattern is not penalized." : "Unknown or required diversity gaps become data gaps for confirmation."}</p>
           </div>
           <div className="modal-actions"><button type="button" className="secondary-button" onClick={onClose}>Cancel</button><button type="submit" className="primary-button">Create Site</button></div>
         </form>

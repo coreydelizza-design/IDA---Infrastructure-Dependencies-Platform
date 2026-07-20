@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
-import { canonicalPortfolioSummary, canonicalSites } from "../data/canonicalData";
-import type { DetailTab, InventoryView, RoleMode, Site } from "../domain/models";
+import { useRegistry } from "./registryContext";
+import type { AuditEvent, DetailTab, InventoryView, RoleMode, Site, SiteRecord } from "../domain";
 
 export type WorkspacePage =
   | "sites"
@@ -31,8 +31,22 @@ function initialParam(name: string): string | null {
   return typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get(name);
 }
 
+function auditEvent(partial: Omit<AuditEvent, "id" | "timestamp" | "actorUserId" | "actorRole" | "source">): AuditEvent {
+  return {
+    id: `audit-${partial.action}-${partial.entityId}-${Date.now()}`,
+    actorUserId: "user-consultant-1",
+    actorRole: "consultant",
+    timestamp: new Date().toISOString(),
+    source: "local",
+    ...partial,
+  };
+}
+
 export function useRegistryState() {
-  const [sites, setSites] = useState<Site[]>(canonicalSites);
+  const registry = useRegistry();
+  const { repositories, refresh, currentEngagement } = registry;
+  const sites = registry.sites;
+
   const [selectedSiteId, setSelectedSiteId] = useState(initialParam("site") ?? "site-dc1-london");
   const [detailsOpen, setDetailsOpen] = useState(initialParam("panel") !== "closed");
   const [activeTab, setActiveTab] = useState<DetailTab>((initialParam("tab") as DetailTab) ?? "overview");
@@ -69,62 +83,51 @@ export function useRegistryState() {
     updateUrl({ panel: "closed" });
   }, [updateUrl]);
 
-  const changeTab = useCallback(
-    (tab: DetailTab) => {
-      setActiveTab(tab);
-      updateUrl({ tab });
+  const changeTab = useCallback((tab: DetailTab) => { setActiveTab(tab); updateUrl({ tab }); }, [updateUrl]);
+  const changeView = useCallback((view: InventoryView) => { setInventoryView(view); updateUrl({ view }); }, [updateUrl]);
+  const changeRoleMode = useCallback((mode: RoleMode) => { setRoleMode(mode); updateUrl({ mode }); }, [updateUrl]);
+
+  const toggleFavorite = useCallback(
+    async (siteId: string) => {
+      const found = await repositories.sites.getById(siteId);
+      if (!found.ok) return;
+      const updated = { ...found.value, favorite: !found.value.favorite, updatedAt: new Date().toISOString(), version: found.value.version + 1 };
+      await repositories.sites.update(updated);
+      await repositories.audit.append(auditEvent({ engagementId: updated.engagementId, entityType: "site", entityId: siteId, action: "site-updated", beforeSummary: `favorite=${found.value.favorite}`, afterSummary: `favorite=${updated.favorite}` }));
+      refresh();
     },
-    [updateUrl],
+    [repositories, refresh],
   );
 
-  const changeView = useCallback(
-    (view: InventoryView) => {
-      setInventoryView(view);
-      updateUrl({ view });
+  const addSite = useCallback(
+    async (record: SiteRecord) => {
+      const created = await repositories.sites.create(record);
+      if (!created.ok) return;
+      await repositories.audit.append(auditEvent({ engagementId: record.engagementId, entityType: "site", entityId: record.id, action: "site-created", beforeSummary: null, afterSummary: `${record.code} – ${record.name}` }));
+      refresh();
+      selectSite(record.id);
     },
-    [updateUrl],
+    [repositories, refresh, selectSite],
   );
 
-  const changeRoleMode = useCallback(
-    (mode: RoleMode) => {
-      setRoleMode(mode);
-      updateUrl({ mode });
+  const archiveSite = useCallback(
+    async (siteId: string) => {
+      const archived = await repositories.sites.archive(siteId);
+      if (!archived.ok) return;
+      await repositories.audit.append(auditEvent({ engagementId: archived.value.engagementId, entityType: "site", entityId: siteId, action: "site-archived", beforeSummary: null, afterSummary: "archived" }));
+      refresh();
     },
-    [updateUrl],
+    [repositories, refresh],
   );
-
-  const toggleFavorite = useCallback((siteId: string) => {
-    setSites((current) =>
-      current.map((site) => (site.id === siteId ? { ...site, favorite: !site.favorite } : site)),
-    );
-  }, []);
-
-  const addSite = useCallback((site: Site) => {
-    setSites((current) => [...current, site]);
-    setSelectedSiteId(site.id);
-    setDetailsOpen(true);
-  }, []);
 
   const filteredSites = useMemo(() => {
     const normalized = search.trim().toLowerCase();
     return sites.filter((site) => {
       const searchText = [
-        site.code,
-        site.name,
-        site.city,
-        site.countryCode,
-        site.countryName,
-        site.type,
-        site.locationType,
+        site.code, site.name, site.city, site.countryCode, site.countryName, site.type, site.locationType,
         ...site.tags,
-        ...site.carrierConnections.flatMap((connection) => [
-          connection.contractedCarrier,
-          connection.underlyingCarrier,
-        ]),
-      ]
-        .join(" ")
-        .toLowerCase();
-
+        ...site.carrierConnections.flatMap((c) => [c.contractedCarrier, c.underlyingCarrier]),
+      ].join(" ").toLowerCase();
       return (
         (!normalized || searchText.includes(normalized)) &&
         (typeFilter === "all" || site.type === typeFilter) &&
@@ -135,7 +138,7 @@ export function useRegistryState() {
     });
   }, [sites, search, typeFilter, locationFilter, countryFilter, healthFilter]);
 
-  const selectedSite = sites.find((site) => site.id === selectedSiteId) ?? sites[0];
+  const selectedSite: Site | undefined = sites.find((site) => site.id === selectedSiteId) ?? sites[0];
 
   return {
     sites,
@@ -152,7 +155,8 @@ export function useRegistryState() {
     locationFilter,
     countryFilter,
     healthFilter,
-    portfolioSummary: canonicalPortfolioSummary,
+    portfolioSummary: registry.portfolioSummary,
+    engagementId: currentEngagement?.id ?? null,
     setActivePage,
     setSearch,
     setTypeFilter,
@@ -166,5 +170,6 @@ export function useRegistryState() {
     changeRoleMode,
     toggleFavorite,
     addSite,
+    archiveSite,
   };
 }

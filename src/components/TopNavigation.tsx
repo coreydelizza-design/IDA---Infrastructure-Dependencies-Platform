@@ -1,5 +1,7 @@
 import { Bell, ChevronDown, CircleCheckBig, Shield, UserRound } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import type { RoleMode } from "../domain/models";
+import { useRegistry } from "../application/registryContext";
 import type { WorkspacePage } from "../application/useRegistryState";
 
 interface TopNavigationProps {
@@ -19,6 +21,61 @@ const topItems: Array<{ label: string; page: WorkspacePage }> = [
   { label: "Administration", page: "administration" },
 ];
 
+const engagementStatusLabel = (status: string) => status.replaceAll("-", " ");
+
+function TenantSelector() {
+  const registry = useRegistry();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocClick = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [open]);
+
+  const enterpriseName = registry.currentEnterprise?.name ?? "No enterprise";
+
+  return (
+    <div className="tenant-selector-wrap" ref={ref}>
+      <button className="tenant-selector" type="button" onClick={() => setOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={open}>
+        <span>{enterpriseName}</span>
+        <ChevronDown size={14} />
+      </button>
+      {open ? (
+        <div className="tenant-popover" role="dialog" aria-label="Engagement context">
+          <div className="tenant-popover-section">
+            <label>Enterprise</label>
+            <select value={registry.currentEnterprise?.id ?? ""} onChange={(event) => registry.selectEnterprise(event.target.value)}>
+              {registry.enterprises.map((enterprise) => (
+                <option key={enterprise.id} value={enterprise.id}>{enterprise.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="tenant-popover-section">
+            <label>Engagement</label>
+            <select value={registry.currentEngagement?.id ?? ""} onChange={(event) => registry.selectEngagement(event.target.value)}>
+              {registry.engagements.map((engagement) => (
+                <option key={engagement.id} value={engagement.id}>{engagement.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="tenant-popover-meta">
+            <span>Status</span>
+            <em className={`status-pill ${registry.currentEngagement?.status ?? ""}`}>
+              {registry.currentEngagement ? engagementStatusLabel(registry.currentEngagement.status) : "—"}
+            </em>
+          </div>
+          <p className="tenant-popover-note">Registry queries are scoped to this engagement. Create/edit/archive of engagements arrives in the next increment.</p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function TopNavigation({ activePage, roleMode, onNavigate, onRoleModeChange }: TopNavigationProps) {
   return (
     <header className="top-navigation">
@@ -31,10 +88,7 @@ export function TopNavigation({ activePage, roleMode, onNavigate, onRoleModeChan
       </button>
 
       <div className="top-navigation-main">
-        <button className="tenant-selector" type="button">
-          <span>Enterprise Co.</span>
-          <ChevronDown size={14} />
-        </button>
+        <TenantSelector />
 
         <nav className="primary-nav" aria-label="Primary navigation">
           {topItems.map((item) => (

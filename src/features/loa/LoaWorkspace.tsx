@@ -1,48 +1,54 @@
 import { CheckCircle2, Clock3, FileSignature, Plus, Search, Send, ShieldCheck } from "lucide-react";
-import { canonicalCarrierRequests, canonicalLoas, canonicalSites } from "../../data/canonicalData";
+import { useRegistry } from "../../application/registryContext";
+
+const statusText = (value: string) => value.replaceAll("-", " ");
 
 export function LoaWorkspace() {
+  const registry = useRegistry();
+  const authorizations = registry.authorizations;
+  const acknowledgments = registry.acknowledgments;
+  const activeCount = authorizations.filter((a) => a.status === "active").length;
+  const pendingSignature = authorizations.filter((a) => a.status === "pending-enterprise-signature").length;
+  const openAcks = acknowledgments.filter((a) => !["accepted", "rejected", "expired"].includes(a.status)).length;
+
   return (
     <main className="secondary-workspace-page loa-workspace">
       <div className="secondary-page-heading">
-        <div><span className="eyebrow">Authorized carrier collaboration</span><h1>LOA Workspace</h1><p>Control enterprise authorization, scope carrier requests, and preserve evidence lineage.</p></div>
-        <button className="primary-button" type="button"><Plus size={16} /> New LOA</button>
+        <div><span className="eyebrow">Authorized carrier collaboration</span><h1>Enterprise Authorizations</h1><p>Enterprise authorization and carrier acknowledgment are tracked separately. Full LOA workflow arrives in a later phase.</p></div>
+        <button className="primary-button" type="button"><Plus size={16} /> New Authorization</button>
       </div>
       <div className="secondary-kpi-grid">
-        <section><FileSignature size={17} /><span>Active LOAs</span><strong>{canonicalLoas.filter((loa) => loa.status === "active").length}</strong><small>59 sites authorized</small></section>
-        <section><Clock3 size={17} /><span>Pending signature</span><strong>{canonicalLoas.filter((loa) => loa.status === "pending-signature").length}</strong><small>Renewal attention</small></section>
-        <section><Send size={17} /><span>Open carrier requests</span><strong>{canonicalCarrierRequests.filter((request) => !["verified", "closed"].includes(request.status)).length}</strong><small>Across 3 carriers</small></section>
+        <section><FileSignature size={17} /><span>Active authorizations</span><strong>{activeCount}</strong><small>Enterprise-signed</small></section>
+        <section><Clock3 size={17} /><span>Pending signature</span><strong>{pendingSignature}</strong><small>Awaiting enterprise sign-off</small></section>
+        <section><Send size={17} /><span>Open acknowledgments</span><strong>{openAcks}</strong><small>Carrier response outstanding</small></section>
         <section><ShieldCheck size={17} /><span>Verified evidence</span><strong>92%</strong><small>Current confidence</small></section>
       </div>
       <div className="secondary-content-grid">
         <section className="enterprise-table-panel">
-          <div className="panel-heading"><div><h2>Letters of Authorization</h2><p>Versioned authority and permitted actions.</p></div><label className="mini-search"><Search size={14} /><input placeholder="Search LOAs..." /></label></div>
+          <div className="panel-heading"><div><h2>Enterprise Authorizations</h2><p>Authorization status, scope, and expiration.</p></div><label className="mini-search"><Search size={14} /><input placeholder="Search authorizations..." /></label></div>
           <div className="enterprise-table loa-table">
             <div className="table-head"><span>Carrier</span><span>Status</span><span>Scope</span><span>Sites</span><span>Expiration</span></div>
-            {canonicalLoas.map((loa) => (
-              <button className="table-row" type="button" key={loa.id}>
-                <span><strong>{loa.carrier}</strong><small>{loa.id}</small></span>
-                <span><em className={`status-pill ${loa.status}`}>{loa.status.replaceAll("-", " ")}</em></span>
-                <span>{loa.scope.slice(0, 2).join(" · ")}</span>
-                <span>{loa.siteCount}</span>
-                <span>{loa.expirationDate}</span>
+            {authorizations.map((auth) => (
+              <button className="table-row" type="button" key={auth.id}>
+                <span><strong>{auth.carrierIds.join(", ")}</strong><small>{auth.id}</small></span>
+                <span><em className={`status-pill ${auth.status}`}>{statusText(auth.status)}</em></span>
+                <span>{auth.scopeSummary}</span>
+                <span>{auth.siteIds.length}</span>
+                <span>{auth.expirationDate ?? "—"}</span>
               </button>
             ))}
           </div>
         </section>
         <section className="enterprise-table-panel request-panel">
-          <div className="panel-heading"><div><h2>Carrier Requests</h2><p>Requests are blocked without active scoped authority.</p></div></div>
+          <div className="panel-heading"><div><h2>Carrier Acknowledgments</h2><p>Separate from enterprise authorization; carrier view is read-only in this phase.</p></div></div>
           <div className="request-list">
-            {canonicalCarrierRequests.map((request) => {
-              const site = canonicalSites.find((candidate) => candidate.id === request.siteId);
-              return (
-                <button type="button" key={request.id}>
-                  <span className="request-icon">{request.status === "verified" ? <CheckCircle2 size={16} /> : <Clock3 size={16} />}</span>
-                  <span><strong>{request.id} · {request.requestType.replaceAll("-", " ")}</strong><small>{site?.code} – {site?.name} · {request.carrier}</small></span>
-                  <em>{request.status.replaceAll("-", " ")}</em>
-                </button>
-              );
-            })}
+            {acknowledgments.map((ack) => (
+              <button type="button" key={ack.id}>
+                <span className="request-icon">{ack.status === "accepted" ? <CheckCircle2 size={16} /> : <Clock3 size={16} />}</span>
+                <span><strong>{ack.carrierId}</strong><small>{ack.authorizationId}</small></span>
+                <em>{statusText(ack.status)}</em>
+              </button>
+            ))}
           </div>
         </section>
       </div>

@@ -12,6 +12,8 @@ export interface ScoreSiteInput {
   profile: ScoringProfile;
   singleSiteApproved: boolean;
   assessedAt: string;
+  /** Provisional unless derived from stored control results (see Phase 1). */
+  provisional?: boolean;
 }
 
 export function bandForScore(score: number): { band: HealthBand; label: string } {
@@ -58,6 +60,7 @@ export function computeResilienceScore(input: ScoreSiteInput): ScoreSnapshot {
     assessedAt: input.assessedAt,
     singleSiteApproved: input.singleSiteApproved,
     technicalGapRetained,
+    provisional: input.provisional ?? true,
   };
 }
 
