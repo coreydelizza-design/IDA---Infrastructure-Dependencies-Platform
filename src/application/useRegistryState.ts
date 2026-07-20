@@ -120,6 +120,35 @@ export function useRegistryState() {
     [repositories, refresh],
   );
 
+  const markReviewComplete = useCallback(
+    async (siteId: string) => {
+      const found = await repositories.sites.getById(siteId);
+      if (!found.ok) return;
+      const before = found.value.registryState;
+      const updated = { ...found.value, registryState: "consultant-verified" as const, lastVerifiedAt: "Just now", nextReviewAt: "in 90 days", updatedAt: new Date().toISOString(), version: found.value.version + 1 };
+      await repositories.sites.update(updated);
+      await repositories.audit.append(auditEvent({ engagementId: updated.engagementId, entityType: "site", entityId: siteId, action: "registry-state-changed", beforeSummary: before, afterSummary: "consultant-verified" }));
+      refresh();
+    },
+    [repositories, refresh],
+  );
+
+  const duplicateAsDraft = useCallback(
+    async (siteId: string) => {
+      const found = await repositories.sites.getById(siteId);
+      if (!found.ok) return;
+      const src = found.value;
+      const newId = `${src.id}-copy`;
+      const copy = { ...src, id: newId, code: `${src.code}-COPY`, name: `${src.name} (Draft)`, registryState: "draft" as const, assessmentStatus: "data-collection" as const, favorite: false, archivedAt: null, version: 1, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      const created = await repositories.sites.create(copy);
+      if (!created.ok) return;
+      await repositories.audit.append(auditEvent({ engagementId: copy.engagementId, entityType: "site", entityId: newId, action: "site-created", beforeSummary: `duplicated from ${src.id}`, afterSummary: copy.code }));
+      refresh();
+      selectSite(newId);
+    },
+    [repositories, refresh, selectSite],
+  );
+
   const filteredSites = useMemo(() => {
     const normalized = search.trim().toLowerCase();
     return sites.filter((site) => {
@@ -142,6 +171,7 @@ export function useRegistryState() {
 
   return {
     sites,
+    siteRecords: registry.siteRecords,
     filteredSites,
     selectedSite,
     selectedSiteId,
@@ -171,5 +201,7 @@ export function useRegistryState() {
     toggleFavorite,
     addSite,
     archiveSite,
+    markReviewComplete,
+    duplicateAsDraft,
   };
 }
