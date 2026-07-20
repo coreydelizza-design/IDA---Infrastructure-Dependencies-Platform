@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { RegistryProvider } from "./application/registryContext";
 import { useRegistryState, type WorkspacePage } from "./application/useRegistryState";
 import { AddSiteModal } from "./components/AddSiteModal";
 import { AppFooter } from "./components/AppFooter";
@@ -37,6 +38,14 @@ const pageTitles: Record<WorkspacePage, string> = {
 };
 
 export default function App() {
+  return (
+    <RegistryProvider>
+      <AppShell />
+    </RegistryProvider>
+  );
+}
+
+function AppShell() {
   const registry = useRegistryState();
   const [addSiteOpen, setAddSiteOpen] = useState(false);
 
@@ -96,14 +105,14 @@ export default function App() {
               onToggleFavorite={registry.toggleFavorite}
               onAddSite={() => setAddSiteOpen(true)}
             />
-            {registry.detailsOpen ? (
+            {registry.detailsOpen && registry.selectedSite ? (
               <DetailPane
                 site={registry.selectedSite}
                 activeTab={registry.activeTab}
                 roleMode={registry.roleMode}
                 onTabChange={registry.changeTab}
                 onClose={registry.closeDetails}
-                onToggleFavorite={() => registry.toggleFavorite(registry.selectedSite.id)}
+                onToggleFavorite={() => registry.selectedSite && registry.toggleFavorite(registry.selectedSite.id)}
               />
             ) : null}
           </>

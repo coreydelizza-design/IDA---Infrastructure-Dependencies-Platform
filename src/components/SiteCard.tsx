@@ -90,7 +90,7 @@ export function SiteCard({ site, selected, compact = false, listMode = false, on
         <div className="site-card-score-row">
           <ScoreRing score={site.score.score} band={site.score.band} />
           <div className="site-card-health-label">
-            <span>Resiliency Health</span>
+            <span>Architecture Assurance</span>
             <strong className={`health-${site.score.band}`}>{site.score.label}</strong>
           </div>
         </div>
