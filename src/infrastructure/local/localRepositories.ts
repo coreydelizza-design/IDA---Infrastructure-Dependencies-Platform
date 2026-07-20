@@ -1,4 +1,5 @@
 import type {
+  AssessmentRepository,
   AuditRepository,
   CircuitRepository,
   CloudResourceRepository,
@@ -17,7 +18,9 @@ import type {
 } from "../../application/ports";
 import { err, ok } from "../../application/ports";
 import type {
+  AssuranceSnapshot,
   AuditEvent,
+  ControlResult,
   Engagement,
   EnterpriseClient,
   SiteRecord,
@@ -197,6 +200,31 @@ function makeAuditRepository(store: LocalStore): AuditRepository {
   };
 }
 
+function makeAssessmentRepository(store: LocalStore): AssessmentRepository {
+  return {
+    async listControlResults(siteId) {
+      return ok(clone(store.read().controlResults.filter((r) => r.siteId === siteId)));
+    },
+    async saveControlResults(siteId, results) {
+      store.write((data) => {
+        data.controlResults = data.controlResults.filter((r) => r.siteId !== siteId).concat(clone(results));
+      });
+      return ok(clone(results));
+    },
+    async listSnapshots(siteId) {
+      return ok(clone(store.read().assuranceSnapshots.filter((s) => s.siteId === siteId)));
+    },
+    async latestSnapshot(siteId) {
+      const list = store.read().assuranceSnapshots.filter((s) => s.siteId === siteId);
+      return ok(list.length ? clone(list[list.length - 1]) : null);
+    },
+    async saveSnapshot(snapshot) {
+      store.write((data) => void data.assuranceSnapshots.push(clone(snapshot)));
+      return ok(clone(snapshot));
+    },
+  };
+}
+
 export function createLocalRepositories(store: LocalStore): RegistryRepositories {
   return {
     organizations: makeOrganizationRepository(store),
@@ -212,5 +240,6 @@ export function createLocalRepositories(store: LocalStore): RegistryRepositories
     dataGaps: scopedRepo(store, "dataGaps") as unknown as DataGapRepository,
     tasks: scopedRepo(store, "tasks") as unknown as TaskRepository,
     audit: makeAuditRepository(store),
+    assessments: makeAssessmentRepository(store),
   };
 }

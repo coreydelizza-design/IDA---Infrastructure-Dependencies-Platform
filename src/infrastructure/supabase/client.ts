@@ -62,5 +62,6 @@ function notConfiguredRepositories(): RegistryRepositories {
     dataGaps: scoped("dataGaps"),
     tasks: scoped("tasks"),
     audit: { listByEngagement: fail("audit.listByEngagement"), append: fail("audit.append") },
+    assessments: { listControlResults: fail("assessments.listControlResults"), saveControlResults: fail("assessments.saveControlResults"), listSnapshots: fail("assessments.listSnapshots"), latestSnapshot: fail("assessments.latestSnapshot"), saveSnapshot: fail("assessments.saveSnapshot") },
   } as unknown as RegistryRepositories;
 }

@@ -31,6 +31,13 @@ const serviceAssuranceLabels: Record<ServiceAssuranceState, string> = {
 
 const assuredServiceStates: ServiceAssuranceState[] = ["confirmed", "consultant-verified", "documented"];
 
+const publicationLabels: Record<Site["publicationState"], string> = {
+  "insufficient-assessment": "Insufficient assessment",
+  provisional: "Provisional assessment",
+  publishable: "Assessed · Publishable",
+  superseded: "Superseded",
+};
+
 interface DetailPaneProps {
   site: Site;
   activeTab: DetailTab;
@@ -42,6 +49,7 @@ interface DetailPaneProps {
   onArchiveSite?: () => void;
   onDuplicateSite?: () => void;
   onMarkReviewComplete?: () => void;
+  onRunAssessment?: () => void;
 }
 
 const tabLabels: Array<{ id: DetailTab; label: string }> = [
@@ -99,7 +107,7 @@ function OverviewPanel({ site }: { site: Site }) {
             Site is scored against its approved archetype.
             {site.score.singleSiteApproved ? " Single-path design is approved and is not penalized." : ""}
           </p>
-          <div className="evidence-confirmation"><ShieldCheck size={13} /> Evidence verified</div>
+          <div className="evidence-confirmation"><ShieldCheck size={13} /> {publicationLabels[site.publicationState]} · {site.completenessPercent}% coverage</div>
         </section>
       </div>
 
@@ -255,7 +263,7 @@ function HistoryPanel({ site }: { site: Site }) {
   );
 }
 
-export function DetailPane({ site, activeTab, roleMode, onTabChange, onClose, onToggleFavorite, onEditSite, onArchiveSite, onDuplicateSite, onMarkReviewComplete }: DetailPaneProps) {
+export function DetailPane({ site, activeTab, roleMode, onTabChange, onClose, onToggleFavorite, onEditSite, onArchiveSite, onDuplicateSite, onMarkReviewComplete, onRunAssessment }: DetailPaneProps) {
   const criticalRisks = site.risks.filter((risk) => risk.severity === "critical" && risk.status !== "closed").length;
   const servicesAssuredPercent = Math.round((site.criticalServices.filter((service) => assuredServiceStates.includes(service.assuranceState)).length / Math.max(site.criticalServices.length, 1)) * 100);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -276,6 +284,7 @@ export function DetailPane({ site, activeTab, roleMode, onTabChange, onClose, on
               <button type="button" aria-label="More site actions" aria-haspopup="menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((v) => !v)}><MoreVertical size={17} /></button>
               {menuOpen ? (
                 <div className="detail-action-dropdown" role="menu">
+                  <button type="button" role="menuitem" onClick={() => runAction(onRunAssessment)}>Run Assessment</button>
                   <button type="button" role="menuitem" onClick={() => runAction(onEditSite)}>Edit Site</button>
                   <button type="button" role="menuitem" onClick={() => runAction(onDuplicateSite)}>Duplicate as Draft</button>
                   <button type="button" role="menuitem" onClick={() => runAction(onMarkReviewComplete)}>Mark Review Complete</button>

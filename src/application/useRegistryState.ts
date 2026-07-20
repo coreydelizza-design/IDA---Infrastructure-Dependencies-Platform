@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useRegistry } from "./registryContext";
+import { assessSite, getAssessmentProfile, snapshotFromResult } from "../domain";
 import type { AuditEvent, DetailTab, InventoryView, RoleMode, Site, SiteRecord } from "../domain";
 
 export type WorkspacePage =
@@ -133,6 +134,39 @@ export function useRegistryState() {
     [repositories, refresh],
   );
 
+  const runAssessment = useCallback(
+    async (siteId: string) => {
+      const found = await repositories.sites.getById(siteId);
+      if (!found.ok) return;
+      const site = found.value;
+      const resultsRes = await repositories.assessments.listControlResults(siteId);
+      const controlResults = resultsRes.ok ? resultsRes.value : [];
+      const profile = getAssessmentProfile(site.archetypeId);
+      const assessment = assessSite(profile, controlResults, {
+        singleSiteApproved: site.score.singleSiteApproved,
+        acceptedRiskControlIds: [],
+        assessedAt: "Just now",
+      });
+      const snapshot = snapshotFromResult(`snapshot-${siteId}-${Date.now()}`, site.engagementId, siteId, assessment, new Date().toISOString());
+      await repositories.assessments.saveSnapshot(snapshot);
+      const updated: SiteRecord = {
+        ...site,
+        score: { ...site.score, score: assessment.architectureAssuranceScore, band: assessment.architectureAssuranceBand, label: assessment.label, provisional: false, technicalGapRetained: assessment.technicalGapRetained, assessedAt: "Just now", profileVersion: assessment.profileVersion },
+        publicationState: assessment.publicationState,
+        assessmentStatus: assessment.publicationState === "publishable" ? "published" : "provisional",
+        completenessPercent: assessment.assessmentCoveragePercent,
+        evidenceConfidencePercent: assessment.evidenceConfidencePercent,
+        lastVerifiedAt: "Just now",
+        updatedAt: new Date().toISOString(),
+        version: site.version + 1,
+      };
+      await repositories.sites.update(updated);
+      await repositories.audit.append(auditEvent({ engagementId: site.engagementId, entityType: "site", entityId: siteId, action: "assessment-status-changed", beforeSummary: `${site.score.score}`, afterSummary: `${assessment.architectureAssuranceScore} · ${assessment.publicationState}` }));
+      refresh();
+    },
+    [repositories, refresh],
+  );
+
   const duplicateAsDraft = useCallback(
     async (siteId: string) => {
       const found = await repositories.sites.getById(siteId);
@@ -203,5 +237,6 @@ export function useRegistryState() {
     archiveSite,
     markReviewComplete,
     duplicateAsDraft,
+    runAssessment,
   };
 }
