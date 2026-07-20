@@ -12,8 +12,23 @@ import {
   Star,
   X,
 } from "lucide-react";
-import type { DetailTab, RoleMode, Site } from "../domain/models";
+import type { DetailTab, RegistryState, RoleMode, ServiceAssuranceState, Site } from "../domain/models";
 import { ScoreRing } from "./ScoreRing";
+
+const registryStateLabels: Record<RegistryState, string> = {
+  "engagement-established": "Engagement Established",
+  collecting: "Collecting",
+  "in-reconciliation": "In Reconciliation",
+  assured: "Assured",
+  "revalidation-due": "Revalidation Due",
+};
+
+const serviceAssuranceLabels: Record<ServiceAssuranceState, string> = {
+  assured: "Assured",
+  "partially-assured": "Partial",
+  unassured: "Unassured",
+  "not-assessed": "Not assessed",
+};
 
 interface DetailPaneProps {
   site: Site;
@@ -95,10 +110,10 @@ function OverviewPanel({ site }: { site: Site }) {
         </section>
 
         <section className="detail-info-card service-card">
-          <h4>Critical Services (Up)</h4>
+          <h4>Critical Services</h4>
           <ul className="service-list">
             {site.criticalServices.slice(0, 3).map((service) => (
-              <li key={service.id}><span>{service.name}</span><strong className={service.status === "up" ? "positive" : "warning"}>{service.status === "up" ? "Up" : service.status}</strong></li>
+              <li key={service.id}><span>{service.name}</span><strong className={service.assuranceState === "assured" ? "positive" : "warning"}>{serviceAssuranceLabels[service.assuranceState]}</strong></li>
             ))}
           </ul>
           <button type="button" className="text-link">View all ({site.criticalServices.length + 3})</button>
@@ -141,7 +156,7 @@ function OverviewPanel({ site }: { site: Site }) {
         </section>
         <section className="detail-status-cell date-cell">
           <span>Next Review</span>
-          <strong>{site.nextReview}</strong>
+          <strong>{site.nextReviewAt}</strong>
           <small>Jun 11, 2024</small>
         </section>
       </div>
@@ -237,7 +252,7 @@ function HistoryPanel({ site }: { site: Site }) {
 
 export function DetailPane({ site, activeTab, roleMode, onTabChange, onClose, onToggleFavorite }: DetailPaneProps) {
   const criticalRisks = site.risks.filter((risk) => risk.severity === "critical" && risk.status !== "closed").length;
-  const servicesUpPercent = Math.round((site.criticalServices.filter((service) => service.status === "up").length / Math.max(site.criticalServices.length, 1)) * 100);
+  const servicesAssuredPercent = Math.round((site.criticalServices.filter((service) => service.assuranceState === "assured").length / Math.max(site.criticalServices.length, 1)) * 100);
 
   return (
     <aside className="detail-pane" aria-label={`${site.code} ${site.name} details`}>
@@ -251,7 +266,7 @@ export function DetailPane({ site, activeTab, roleMode, onTabChange, onClose, on
           </div>
         </div>
         <h2>{site.code} – {site.name}</h2>
-        <p className="detail-location"><MapPin size={13} /> {site.city}, {site.countryName}<span className="online-indicator"><i /> {site.online ? "Online" : "Offline"}</span></p>
+        <p className="detail-location"><MapPin size={13} /> {site.city}, {site.countryName}<span className="registry-chip"><i /> {registryStateLabels[site.registryState]}</span></p>
         <div className="detail-score-row">
           <ScoreRing score={site.score.score} band={site.score.band} size="detail" />
           <div>
@@ -267,7 +282,7 @@ export function DetailPane({ site, activeTab, roleMode, onTabChange, onClose, on
         <div><strong><Network size={13} /> {site.carrierConnections.length}</strong><span>Carriers</span></div>
         <div><strong><GitBranch size={13} /> {site.dependencyCount}</strong><span>Dependencies</span></div>
         <div><strong><ShieldCheck size={13} /> {criticalRisks}</strong><span>Open Critical Risks</span></div>
-        <div><strong><Circle size={11} /> {servicesUpPercent}%</strong><span>Critical Services Up</span></div>
+        <div><strong><Circle size={11} /> {servicesAssuredPercent}%</strong><span>Services Assured</span></div>
       </div>
 
       <div className="detail-tabs" role="tablist">

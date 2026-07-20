@@ -2,6 +2,7 @@ import { Plus, X } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 import type { Site } from "../domain/models";
 import { computeResilienceScore } from "../domain/scoring";
+import { deriveRegistrationDataGaps } from "../domain/assurance";
 
 interface AddSiteModalProps {
   open: boolean;
@@ -39,6 +40,8 @@ export function AddSiteModal({ open, onClose, onCreate }: AddSiteModalProps) {
   const [type, setType] = useState("Branch Office");
   const [carrierCount, setCarrierCount] = useState(1);
   const [singleSiteApproved, setSingleSiteApproved] = useState(false);
+  const [requireEnterpriseFollowUp, setRequireEnterpriseFollowUp] = useState(true);
+  const [requireCarrierConfirmation, setRequireCarrierConfirmation] = useState(true);
 
   const previewScore = useMemo(() => {
     const profileRequiresDiversity = type.includes("Data Center") || type.includes("Hub") || type.includes("Contact");
@@ -66,19 +69,25 @@ export function AddSiteModal({ open, onClose, onCreate }: AddSiteModalProps) {
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const id = `site-${code.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
-    const connections = Array.from({ length: carrierCount }, (_, index) => ({
-      id: `${id}-circuit-${index + 1}`,
-      contractedCarrier: index === 0 ? "Carrier pending" : `Secondary carrier ${index}`,
-      underlyingCarrier: "Verification pending",
-      role: index === 0 ? "primary" as const : index === 1 ? "secondary" as const : "tertiary" as const,
-      serviceType: "DIA",
-      circuitId: "Pending",
-      accessProvider: "Pending",
-      bandwidth: "Pending",
-      entrance: "Unknown",
-      routeVerification: "unknown" as const,
-    }));
+    const createdAt = "Just now";
+    const suffix = code.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-");
+    const id = `site-${suffix}-new`;
+
+    // Carrier and circuit facts are unknown at registration. We do NOT fabricate
+    // carrier or circuit records — we record data gaps for the missing facts and
+    // let the consultant flag enterprise follow-up and/or carrier confirmation.
+    const dataGaps = deriveRegistrationDataGaps({
+      siteId: id,
+      code: code.trim(),
+      knownCarrierCount: carrierCount,
+      providedFields: {},
+      requireEnterpriseFollowUp,
+      requireCarrierConfirmation,
+      createdAt,
+    });
+
+    const enterpriseGaps = dataGaps.filter((gap) => gap.followUp === "enterprise").length;
+    const carrierGaps = dataGaps.filter((gap) => gap.followUp === "carrier").length;
 
     onCreate({
       id,
@@ -91,19 +100,28 @@ export function AddSiteModal({ open, onClose, onCreate }: AddSiteModalProps) {
       countryCode: countryCode.trim().toUpperCase(),
       countryName: countryName.trim(),
       region: "Unassigned",
-      address: "Address pending verification",
-      timezone: "Pending",
-      owner: "Unassigned",
-      online: true,
+      address: "Not yet provided",
+      timezone: "Not yet provided",
+      owner: "Not yet assigned",
+      engagementId: "eng-enterprise-co",
+      registryState: "collecting",
+      assessmentStatus: "in-progress",
+      completenessPercent: 10,
+      lastVerifiedAt: "Not yet verified",
+      nextReviewAt: "in 30 days",
+      pendingEnterpriseRequests: requireEnterpriseFollowUp ? enterpriseGaps : 0,
+      pendingCarrierRequests: requireCarrierConfirmation ? carrierGaps : 0,
+      unresolvedDependencyCount: carrierCount,
+      verificationSummary: { verified: 0, providerClaimed: 0, unverified: carrierCount, gaps: carrierCount },
       favorite: false,
       evidenceBadge: singleSiteApproved ? "single-site-acceptable" : null,
       imageAsset: assetForType(type),
       score: previewScore,
-      carrierConnections: connections,
-      dependencyCount: connections.length,
+      carrierConnections: [],
+      dependencyCount: 0,
       cardOpenRiskCount: carrierCount === 1 && !singleSiteApproved ? 1 : 0,
       risks: carrierCount === 1 && !singleSiteApproved
-        ? [{ id: `RSK-${Date.now().toString().slice(-4)}`, title: "Single carrier dependency", severity: "high", status: "open", control: "NET-DIV-01" }]
+        ? [{ id: `RSK-${suffix.slice(0, 4).toUpperCase()}`, title: "Single carrier dependency", severity: "high", status: "open", control: "NET-DIV-01" }]
         : [],
       criticalServices: [],
       resilienceIndicators: [
@@ -122,8 +140,8 @@ export function AddSiteModal({ open, onClose, onCreate }: AddSiteModalProps) {
       ],
       evidenceConfidence: "low",
       evidenceConfidencePercent: 10,
-      nextReview: "in 30 days",
       activity: [{ id: `${id}-created`, action: "Site registered", actor: "AB", relativeTime: "Just now" }],
+      dataGaps,
       tags: [type.toLowerCase().replaceAll(" ", "-"), "new-site", "evidence-pending"],
     });
     onClose();
@@ -144,8 +162,10 @@ export function AddSiteModal({ open, onClose, onCreate }: AddSiteModalProps) {
             <label><span>City</span><input required value={city} onChange={(event) => setCity(event.target.value)} /></label>
             <label><span>Country code</span><input required maxLength={2} value={countryCode} onChange={(event) => setCountryCode(event.target.value)} /></label>
             <label className="form-wide"><span>Country name</span><input required value={countryName} onChange={(event) => setCountryName(event.target.value)} /></label>
-            <label><span>Carrier count</span><input type="number" min={1} max={4} value={carrierCount} onChange={(event) => setCarrierCount(Number(event.target.value))} /></label>
+            <label><span>Known carrier count</span><input type="number" min={0} max={4} value={carrierCount} onChange={(event) => setCarrierCount(Number(event.target.value))} /></label>
             <label className="checkbox-field"><input type="checkbox" checked={singleSiteApproved} onChange={(event) => setSingleSiteApproved(event.target.checked)} /><span>Approved single-site design</span></label>
+            <label className="checkbox-field"><input type="checkbox" checked={requireEnterpriseFollowUp} onChange={(event) => setRequireEnterpriseFollowUp(event.target.checked)} /><span>Enterprise follow-up required</span></label>
+            <label className="checkbox-field"><input type="checkbox" checked={requireCarrierConfirmation} onChange={(event) => setRequireCarrierConfirmation(event.target.checked)} /><span>Carrier confirmation required</span></label>
           </div>
           <div className="score-preview">
             <span>Baseline score</span>

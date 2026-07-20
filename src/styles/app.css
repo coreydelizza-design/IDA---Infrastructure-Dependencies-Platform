@@ -1332,7 +1332,7 @@ select {
   color: #d5dee8;
 }
 
-.online-indicator {
+.registry-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -1340,7 +1340,7 @@ select {
   color: var(--green-500);
 }
 
-.online-indicator i {
+.registry-chip i {
   width: 6px;
   height: 6px;
   border-radius: 50%;

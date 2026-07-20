@@ -1,4 +1,16 @@
-import type { CarrierRequest, LoaRecord, PortfolioSummary, Site } from "../domain/models";
+import type {
+  CarrierAcknowledgment,
+  ConfirmationRequest,
+  Engagement,
+  EngagementMember,
+  EnterpriseAuthorization,
+  EnterpriseContact,
+  PortfolioSummary,
+  Site,
+  VerificationSummary,
+} from "../domain/models";
+
+const ENGAGEMENT_ID = "eng-enterprise-co";
 
 const commonIndicators = [
   { id: "power", label: "Power Resilience", value: "Redundant (N+1)", state: "pass", verification: "verified" },
@@ -11,10 +23,13 @@ const commonIndicators = [
   { id: "recovery", label: "Backup & Recovery", value: "Strong", state: "pass", verification: "verified" },
 ] as const;
 
+// Critical services describe documented criticality, dependency role, and
+// recovery objectives with a point-in-time assurance posture — never live
+// up/down status.
 const commonServices = [
-  { id: "svc-core-banking", name: "Core Banking Platform", status: "up", rtoMinutes: 15, rpoMinutes: 5 },
-  { id: "svc-customer-data", name: "Customer Data Platform", status: "up", rtoMinutes: 30, rpoMinutes: 15 },
-  { id: "svc-payments", name: "Payments Processing", status: "up", rtoMinutes: 5, rpoMinutes: 0 },
+  { id: "svc-core-banking", name: "Core Banking Platform", criticality: "critical", dependencyRole: "primary", rtoMinutes: 15, rpoMinutes: 5, assuranceState: "assured" },
+  { id: "svc-customer-data", name: "Customer Data Platform", criticality: "high", dependencyRole: "supporting", rtoMinutes: 30, rpoMinutes: 15, assuranceState: "assured" },
+  { id: "svc-payments", name: "Payments Processing", criticality: "critical", dependencyRole: "primary", rtoMinutes: 5, rpoMinutes: 0, assuranceState: "partially-assured" },
 ] as const;
 
 const commonActivity = [
@@ -23,14 +38,71 @@ const commonActivity = [
   { id: "activity-3", action: "Risk RSK-102 review requested", actor: "Michael T.", relativeTime: "5 days ago" },
 ] as const;
 
-function createSite(input: Omit<Site, "resilienceIndicators" | "criticalServices" | "compliance" | "activity"> & {
+function summarizeVerification(connections: Site["carrierConnections"]): VerificationSummary {
+  const verified = connections.filter((c) => c.routeVerification === "verified").length;
+  const providerClaimed = connections.filter((c) => c.routeVerification === "provider-claimed").length;
+  const unverified = connections.filter((c) => c.routeVerification === "inferred" || c.routeVerification === "unknown").length;
+  const gaps = connections.filter((c) => c.routeVerification === "unknown").length;
+  return { verified, providerClaimed, unverified, gaps };
+}
+
+type SiteInput = Omit<
+  Site,
+  | "resilienceIndicators"
+  | "criticalServices"
+  | "compliance"
+  | "activity"
+  | "dataGaps"
+  | "engagementId"
+  | "registryState"
+  | "assessmentStatus"
+  | "completenessPercent"
+  | "lastVerifiedAt"
+  | "nextReviewAt"
+  | "pendingEnterpriseRequests"
+  | "pendingCarrierRequests"
+  | "unresolvedDependencyCount"
+  | "verificationSummary"
+> & {
+  nextReview: string;
+  registryState?: Site["registryState"];
+  assessmentStatus?: Site["assessmentStatus"];
   resilienceIndicators?: Site["resilienceIndicators"];
   criticalServices?: Site["criticalServices"];
   compliance?: Site["compliance"];
   activity?: Site["activity"];
-}): Site {
+  dataGaps?: Site["dataGaps"];
+};
+
+function createSite(input: SiteInput): Site {
+  const { nextReview, registryState, assessmentStatus, ...rest } = input;
+  const verificationSummary = summarizeVerification(rest.carrierConnections);
+  const total = rest.carrierConnections.length;
+  const documented = verificationSummary.verified + verificationSummary.providerClaimed;
+  const openRisks = rest.risks.filter((risk) => risk.status === "open").length;
+
+  const derivedRegistryState: Site["registryState"] =
+    registryState ??
+    (rest.evidenceBadge === "under-carrier-review"
+      ? "in-reconciliation"
+      : rest.evidenceConfidence === "high"
+        ? "assured"
+        : rest.evidenceConfidencePercent < 60
+          ? "revalidation-due"
+          : "collecting");
+
   return {
-    ...input,
+    ...rest,
+    engagementId: ENGAGEMENT_ID,
+    registryState: derivedRegistryState,
+    assessmentStatus: assessmentStatus ?? (rest.evidenceConfidencePercent < 55 ? "revalidation-due" : "assessed"),
+    completenessPercent: Math.round(60 + (documented / Math.max(total, 1)) * 40),
+    lastVerifiedAt: rest.score.assessedAt,
+    nextReviewAt: nextReview,
+    pendingEnterpriseRequests: openRisks > 0 ? 1 : 0,
+    pendingCarrierRequests: verificationSummary.providerClaimed + verificationSummary.unverified,
+    unresolvedDependencyCount: rest.carrierConnections.filter((c) => c.routeVerification !== "verified").length,
+    verificationSummary,
     resilienceIndicators: input.resilienceIndicators ?? [...commonIndicators],
     criticalServices: input.criticalServices ?? [...commonServices],
     compliance: input.compliance ?? [
@@ -39,6 +111,7 @@ function createSite(input: Omit<Site, "resilienceIndicators" | "criticalServices
       { framework: "ISO 22301", state: "mapped", mappedControls: 9, lastAssessed: "12 days ago" },
     ],
     activity: input.activity ?? [...commonActivity],
+    dataGaps: input.dataGaps ?? [],
   };
 }
 
@@ -57,7 +130,6 @@ export const canonicalSites: Site[] = [
     address: "1 Data Center Way\nLondon, UK EC1A 1BB",
     timezone: "GMT (UTC+0)",
     owner: "Resilience Office",
-    online: true,
     favorite: false,
     evidenceBadge: "evidence-verified",
     imageAsset: "/assets/sites/dc1-london.webp",
@@ -121,7 +193,6 @@ export const canonicalSites: Site[] = [
     address: "Hanauer Landstrasse 302\nFrankfurt 60314",
     timezone: "CET (UTC+1)",
     owner: "Infrastructure Operations",
-    online: true,
     favorite: false,
     evidenceBadge: "provider-claimed-diverse",
     imageAsset: "/assets/sites/dc2-frankfurt.webp",
@@ -152,7 +223,6 @@ export const canonicalSites: Site[] = [
     address: "18 Rue de Londres\nParis 75009",
     timezone: "CET (UTC+1)",
     owner: "France IT",
-    online: true,
     favorite: true,
     evidenceBadge: null,
     imageAsset: "/assets/sites/br-1001-paris.webp",
@@ -185,7 +255,6 @@ export const canonicalSites: Site[] = [
     address: "55 Hudson Yards\nNew York, NY 10001",
     timezone: "EST (UTC-5)",
     owner: "Global Markets Technology",
-    online: true,
     favorite: false,
     evidenceBadge: "under-carrier-review",
     imageAsset: "/assets/sites/trd-new-york.webp",
@@ -217,7 +286,6 @@ export const canonicalSites: Site[] = [
     address: "8 Marina View\nSingapore 018960",
     timezone: "SGT (UTC+8)",
     owner: "APAC Technology",
-    online: true,
     favorite: false,
     evidenceBadge: "single-site-acceptable",
     imageAsset: "/assets/sites/ro-singapore.webp",
@@ -253,7 +321,6 @@ export const canonicalSites: Site[] = [
     address: "Calle de Serrano 55\nMadrid 28006",
     timezone: "CET (UTC+1)",
     owner: "Edge Platform Team",
-    online: true,
     favorite: false,
     evidenceBadge: "risk-accepted",
     imageAsset: "/assets/sites/edge-25-madrid.webp",
@@ -295,7 +362,6 @@ export const canonicalSites: Site[] = [
     address: "AWS eu-west-1\nMultiple Availability Zones",
     timezone: "GMT (UTC+0)",
     owner: "Cloud Platform Team",
-    online: true,
     favorite: false,
     evidenceBadge: "evidence-verified",
     imageAsset: "/assets/sites/aws-eu-west-1.webp",
@@ -325,7 +391,6 @@ export const canonicalSites: Site[] = [
     address: "Science Park 120\nAmsterdam 1098 XG",
     timezone: "CET (UTC+1)",
     owner: "Network Engineering",
-    online: true,
     favorite: false,
     evidenceBadge: "provider-claimed-diverse",
     imageAsset: "/assets/sites/hub-amsterdam.webp",
@@ -355,45 +420,86 @@ export const canonicalPortfolioSummary: PortfolioSummary = {
   averageLabel: "Good",
 };
 
-export const canonicalLoas: LoaRecord[] = [
+export const canonicalEngagement: Engagement = {
+  id: ENGAGEMENT_ID,
+  enterpriseName: "Enterprise Co.",
+  status: "active",
+  startedAt: "2026-01-05",
+  engagementLeadId: "user-engagement-lead",
+  scopeSummary: "Global infrastructure dependency assurance across 128 sites in 23 countries.",
+};
+
+export const canonicalEngagementMembers: EngagementMember[] = [
+  { id: "mem-1", engagementId: ENGAGEMENT_ID, userId: "user-engagement-lead", name: "Sarah J.", role: "engagement-lead" },
+  { id: "mem-2", engagementId: ENGAGEMENT_ID, userId: "user-consultant-1", name: "Michael T.", role: "consultant" },
+  { id: "mem-3", engagementId: ENGAGEMENT_ID, userId: "user-reviewer-1", name: "Priya N.", role: "evidence-reviewer" },
+];
+
+export const canonicalEnterpriseContacts: EnterpriseContact[] = [
+  { id: "con-1", engagementId: ENGAGEMENT_ID, name: "Dana Fox", title: "VP Resilience", role: "enterprise-sponsor" },
+  { id: "con-2", engagementId: ENGAGEMENT_ID, name: "Owen Ridley", title: "Head of Network", role: "enterprise-approver" },
+  { id: "con-3", engagementId: ENGAGEMENT_ID, name: "Lena Ortiz", title: "Infrastructure Analyst", role: "enterprise-contributor" },
+];
+
+// Enterprise-issued authorizations. Signature status, scope, effective/expiry,
+// and revocation are tracked here; carrier acknowledgment is a separate state
+// (see canonicalCarrierAcknowledgments).
+export const canonicalAuthorizations: EnterpriseAuthorization[] = [
   {
-    id: "loa-uk-2026",
+    id: "auth-uk-2026",
+    engagementId: ENGAGEMENT_ID,
     enterprise: "Enterprise Co.",
-    carrier: "BT Global Services",
-    scope: ["Circuit inventory", "Route evidence", "Demarc records"],
+    carriers: ["BT Global Services"],
+    scopeSites: ["site-dc1-london"],
+    scopeFields: ["circuitId", "routeVerification", "underlyingCarrier", "entrance"],
+    signatureStatus: "signed",
     status: "active",
     effectiveDate: "2026-01-01",
     expirationDate: "2026-12-31",
-    authorizedActions: ["request-records", "verify-service-data", "schedule-review"],
+    revokedAt: null,
     siteCount: 18,
   },
   {
-    id: "loa-emea-gtt-2026",
+    id: "auth-emea-gtt-2026",
+    engagementId: ENGAGEMENT_ID,
     enterprise: "Enterprise Co.",
-    carrier: "GTT",
-    scope: ["Circuit inventory", "Underlying carrier", "Route diversity"],
+    carriers: ["GTT"],
+    scopeSites: ["site-hub-amsterdam", "site-dc2-frankfurt"],
+    scopeFields: ["circuitId", "underlyingCarrier", "routeVerification"],
+    signatureStatus: "signed",
     status: "active",
     effectiveDate: "2026-03-15",
     expirationDate: "2027-03-14",
-    authorizedActions: ["request-records", "verify-service-data"],
+    revokedAt: null,
     siteCount: 41,
   },
   {
-    id: "loa-lumen-renewal",
+    id: "auth-lumen-renewal",
+    engagementId: ENGAGEMENT_ID,
     enterprise: "Enterprise Co.",
-    carrier: "Lumen",
-    scope: ["Circuit inventory", "LOA/CFA evidence"],
+    carriers: ["Lumen"],
+    scopeSites: ["site-dc1-london"],
+    scopeFields: ["circuitId"],
+    signatureStatus: "pending-signature",
     status: "pending-signature",
     effectiveDate: "2026-08-01",
     expirationDate: "2027-07-31",
-    authorizedActions: ["request-records"],
+    revokedAt: null,
     siteCount: 26,
   },
 ];
 
-export const canonicalCarrierRequests: CarrierRequest[] = [
-  { id: "CR-2048", loaId: "loa-uk-2026", siteId: "site-dc1-london", carrier: "BT Global Services", requestType: "route-diversity", status: "verified", dueDate: "2026-07-20", evidenceCount: 4 },
-  { id: "CR-2051", loaId: "loa-emea-gtt-2026", siteId: "site-hub-amsterdam", carrier: "GTT", requestType: "route-diversity", status: "carrier-review", dueDate: "2026-07-24", evidenceCount: 1 },
-  { id: "CR-2054", loaId: "loa-uk-2026", siteId: "site-dc1-london", carrier: "BT Global Services", requestType: "demarc-evidence", status: "responded", dueDate: "2026-07-18", evidenceCount: 3 },
-  { id: "CR-2058", loaId: "loa-emea-gtt-2026", siteId: "site-dc2-frankfurt", carrier: "GTT", requestType: "circuit-inventory", status: "sent", dueDate: "2026-07-29", evidenceCount: 0 },
+// Carrier acknowledgment of an authorization — independent of the enterprise
+// signature/authorization status above.
+export const canonicalCarrierAcknowledgments: CarrierAcknowledgment[] = [
+  { id: "ack-uk-bt", authorizationId: "auth-uk-2026", carrier: "BT Global Services", acknowledgmentStatus: "acknowledged", acknowledgedAt: "2026-01-08" },
+  { id: "ack-emea-gtt", authorizationId: "auth-emea-gtt-2026", carrier: "GTT", acknowledgmentStatus: "pending", acknowledgedAt: null },
+  { id: "ack-lumen", authorizationId: "auth-lumen-renewal", carrier: "Lumen", acknowledgmentStatus: "not-sent", acknowledgedAt: null },
+];
+
+export const canonicalConfirmationRequests: ConfirmationRequest[] = [
+  { id: "CR-2048", engagementId: ENGAGEMENT_ID, authorizationId: "auth-uk-2026", siteId: "site-dc1-london", carrier: "BT Global Services", requestedFields: ["routeVerification", "entrance"], status: "reconciled", createdAt: "2026-07-10", dueAt: "2026-07-20" },
+  { id: "CR-2051", engagementId: ENGAGEMENT_ID, authorizationId: "auth-emea-gtt-2026", siteId: "site-hub-amsterdam", carrier: "GTT", requestedFields: ["routeVerification"], status: "carrier-review", createdAt: "2026-07-14", dueAt: "2026-07-24" },
+  { id: "CR-2054", engagementId: ENGAGEMENT_ID, authorizationId: "auth-uk-2026", siteId: "site-dc1-london", carrier: "BT Global Services", requestedFields: ["circuitId"], status: "responded", createdAt: "2026-07-08", dueAt: "2026-07-18" },
+  { id: "CR-2058", engagementId: ENGAGEMENT_ID, authorizationId: "auth-emea-gtt-2026", siteId: "site-dc2-frankfurt", carrier: "GTT", requestedFields: ["circuitId", "underlyingCarrier"], status: "submitted", createdAt: "2026-07-16", dueAt: "2026-07-29" },
 ];
