@@ -1,6 +1,7 @@
 import type {
   AssessmentRepository,
   AuditRepository,
+  ConnectorRepository,
   CircuitRepository,
   CloudResourceRepository,
   ComponentRepository,
@@ -23,6 +24,9 @@ import type {
   ControlResult,
   Engagement,
   EnterpriseClient,
+  FieldProvenance,
+  ImportBatch,
+  ProposedClaim,
   SiteRecord,
 } from "../../domain";
 import type { LocalStore, RegistryDataset } from "./localStore";
@@ -225,6 +229,40 @@ function makeAssessmentRepository(store: LocalStore): AssessmentRepository {
   };
 }
 
+function makeConnectorRepository(store: LocalStore): ConnectorRepository {
+  return {
+    async stageImport(batch, claims) {
+      store.write((data) => {
+        data.importBatches.push(clone(batch));
+        data.proposedClaims.push(...clone(claims));
+      });
+      return ok(clone(batch));
+    },
+    async listBatches(engagementId) {
+      return ok(clone(store.read().importBatches.filter((b) => b.engagementId === engagementId)));
+    },
+    async listClaims(engagementId) {
+      return ok(clone(store.read().proposedClaims.filter((c) => c.engagementId === engagementId)));
+    },
+    async updateClaim(claim) {
+      let updated = false;
+      store.write((data) => {
+        const idx = data.proposedClaims.findIndex((c) => c.id === claim.id);
+        if (idx >= 0) { data.proposedClaims[idx] = clone(claim); updated = true; }
+      });
+      return updated ? ok(clone(claim)) : err({ kind: "not-found", message: `claim ${claim.id} not found` });
+    },
+    async saveProvenance(provenance) {
+      store.write((data) => void data.fieldProvenance.push(clone(provenance)));
+      return ok(clone(provenance));
+    },
+    async findProvenance(entityType, fieldPath) {
+      const matches = store.read().fieldProvenance.filter((p) => p.entityType === entityType && p.fieldPath === fieldPath && !p.supersededAt);
+      return ok(matches.length ? clone(matches[matches.length - 1]) : null);
+    },
+  };
+}
+
 export function createLocalRepositories(store: LocalStore): RegistryRepositories {
   return {
     organizations: makeOrganizationRepository(store),
@@ -241,5 +279,6 @@ export function createLocalRepositories(store: LocalStore): RegistryRepositories
     tasks: scopedRepo(store, "tasks") as unknown as TaskRepository,
     audit: makeAuditRepository(store),
     assessments: makeAssessmentRepository(store),
+    connectors: makeConnectorRepository(store),
   };
 }

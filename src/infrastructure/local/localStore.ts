@@ -15,7 +15,10 @@ import type {
   EnterpriseClient,
   EnterpriseContact,
   EvidenceItem,
+  FieldProvenance,
+  ImportBatch,
   InfrastructureComponent,
+  ProposedClaim,
   Provider,
   RegistryTask,
   SiteRecord,
@@ -40,6 +43,9 @@ export interface RegistryDataset {
   tasks: RegistryTask[];
   controlResults: ControlResult[];
   assuranceSnapshots: AssuranceSnapshot[];
+  importBatches: ImportBatch[];
+  proposedClaims: ProposedClaim[];
+  fieldProvenance: FieldProvenance[];
   authorizations: EnterpriseAuthorizationSummary[];
   acknowledgments: CarrierAcknowledgmentSummary[];
   audit: AuditEvent[];

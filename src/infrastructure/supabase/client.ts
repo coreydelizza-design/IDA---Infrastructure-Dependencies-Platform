@@ -63,5 +63,6 @@ function notConfiguredRepositories(): RegistryRepositories {
     tasks: scoped("tasks"),
     audit: { listByEngagement: fail("audit.listByEngagement"), append: fail("audit.append") },
     assessments: { listControlResults: fail("assessments.listControlResults"), saveControlResults: fail("assessments.saveControlResults"), listSnapshots: fail("assessments.listSnapshots"), latestSnapshot: fail("assessments.latestSnapshot"), saveSnapshot: fail("assessments.saveSnapshot") },
+    connectors: { stageImport: fail("connectors.stageImport"), listBatches: fail("connectors.listBatches"), listClaims: fail("connectors.listClaims"), updateClaim: fail("connectors.updateClaim"), saveProvenance: fail("connectors.saveProvenance"), findProvenance: fail("connectors.findProvenance") },
   } as unknown as RegistryRepositories;
 }
