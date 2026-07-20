@@ -82,7 +82,7 @@ export function SiteInventoryPage({
       <div className={`site-collection-frame ${view === "list" ? "list-mode" : "grid-mode"}`}>
         {view === "grid" ? (
           <div className="site-grid">
-            {sites.slice(0, 8).map((site, index) => (
+            {sites.map((site, index) => (
               <SiteCard
                 key={site.id}
                 site={site}

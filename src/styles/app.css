@@ -814,14 +814,20 @@ select {
   max-width: calc(100% - 84px);
   height: 593px;
   margin-top: 7px;
+  /* Internal scroll: the reference 8 sites fill exactly 593px (no scrollbar);
+     additional sites overflow into scrollable compact rows. */
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .site-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: 205px 202px 166px;
+  grid-auto-rows: 166px;
+  align-content: start;
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   gap: 10px;
 }
 
