@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { RegistryProvider } from "./application/registryContext";
 import { useRegistryState, type WorkspacePage } from "./application/useRegistryState";
-import { AddSiteModal } from "./components/AddSiteModal";
+import { SiteIntakeModal } from "./components/intake/SiteIntakeModal";
+import type { SiteRecord } from "./domain";
 import { AppFooter } from "./components/AppFooter";
 import { DetailPane } from "./components/DetailPane";
 import { PlaceholderPage } from "./components/PlaceholderPage";
@@ -47,7 +48,11 @@ export default function App() {
 
 function AppShell() {
   const registry = useRegistryState();
-  const [addSiteOpen, setAddSiteOpen] = useState(false);
+  const [intake, setIntake] = useState<{ open: boolean; mode: "create" | "edit"; editingSite: SiteRecord | null }>({ open: false, mode: "create", editingSite: null });
+
+  const openCreate = () => setIntake({ open: true, mode: "create", editingSite: null });
+  const openEdit = (siteId: string) => setIntake({ open: true, mode: "edit", editingSite: registry.siteRecords.find((s) => s.id === siteId) ?? null });
+  const closeIntake = () => setIntake((s) => ({ ...s, open: false }));
 
   // Uniformly scale the locked 1672x941 console to fit the viewport while
   // preserving its exact aspect ratio (see docs/UI_LOCK.md). At the canonical
@@ -103,7 +108,7 @@ function AppShell() {
               onViewChange={registry.changeView}
               onSelectSite={registry.selectSite}
               onToggleFavorite={registry.toggleFavorite}
-              onAddSite={() => setAddSiteOpen(true)}
+              onAddSite={openCreate}
             />
             {registry.detailsOpen && registry.selectedSite ? (
               <DetailPane
@@ -113,6 +118,10 @@ function AppShell() {
                 onTabChange={registry.changeTab}
                 onClose={registry.closeDetails}
                 onToggleFavorite={() => registry.selectedSite && registry.toggleFavorite(registry.selectedSite.id)}
+                onEditSite={() => registry.selectedSite && openEdit(registry.selectedSite.id)}
+                onArchiveSite={() => registry.selectedSite && registry.archiveSite(registry.selectedSite.id)}
+                onDuplicateSite={() => registry.selectedSite && registry.duplicateAsDraft(registry.selectedSite.id)}
+                onMarkReviewComplete={() => registry.selectedSite && registry.markReviewComplete(registry.selectedSite.id)}
               />
             ) : null}
           </>
@@ -126,7 +135,13 @@ function AppShell() {
       </div>
 
       <AppFooter />
-      <AddSiteModal open={addSiteOpen} onClose={() => setAddSiteOpen(false)} onCreate={registry.addSite} />
+      <SiteIntakeModal
+        open={intake.open}
+        mode={intake.mode}
+        editingSite={intake.editingSite}
+        onClose={closeIntake}
+        onComplete={(siteId) => { registry.selectSite(siteId); closeIntake(); }}
+      />
     </div>
   );
 }
