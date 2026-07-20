@@ -2,6 +2,7 @@
   color-scheme: dark;
   --app-width: 1672px;
   --app-height: 941px;
+  --ui-scale: 1;
   --topbar-height: 51px;
   --sidebar-width: 204px;
   --footer-height: 40px;
