@@ -16,7 +16,10 @@ import type {
   EnterpriseClient,
   EnterpriseContact,
   EvidenceItem,
+  FieldProvenance,
+  ImportBatch,
   InfrastructureComponent,
+  ProposedClaim,
   Provider,
   RegistryTask,
   SiteRecord,
@@ -98,6 +101,15 @@ export interface AssessmentRepository {
   saveSnapshot(snapshot: AssuranceSnapshot): Promise<Result<AssuranceSnapshot>>;
 }
 
+export interface ConnectorRepository {
+  stageImport(batch: ImportBatch, claims: ProposedClaim[]): Promise<Result<ImportBatch>>;
+  listBatches(engagementId: string): Promise<Result<ImportBatch[]>>;
+  listClaims(engagementId: string): Promise<Result<ProposedClaim[]>>;
+  updateClaim(claim: ProposedClaim): Promise<Result<ProposedClaim>>;
+  saveProvenance(provenance: FieldProvenance): Promise<Result<FieldProvenance>>;
+  findProvenance(entityType: string, fieldPath: string): Promise<Result<FieldProvenance | null>>;
+}
+
 /** The full set of registry repositories, resolved per data mode. */
 export interface RegistryRepositories {
   organizations: OrganizationRepository;
@@ -114,4 +126,5 @@ export interface RegistryRepositories {
   tasks: TaskRepository;
   audit: AuditRepository;
   assessments: AssessmentRepository;
+  connectors: ConnectorRepository;
 }

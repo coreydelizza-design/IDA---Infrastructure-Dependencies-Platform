@@ -384,6 +384,9 @@ export function buildSeedDataset(): RegistryDataset {
     tasks: [],
     controlResults,
     assuranceSnapshots: snapshots,
+    importBatches: [],
+    proposedClaims: [],
+    fieldProvenance: [],
     authorizations: [
       { id: "auth-uk-2026", engagementId: ENGAGEMENT_ID, enterpriseClientId: ENTERPRISE_ID, status: "active", scopeSummary: "BT circuit inventory and route evidence for UK sites", effectiveDate: "2026-01-01", expirationDate: "2026-12-31", carrierIds: ["provider-bt-global-services"], siteIds: ["site-dc1-london"] },
       { id: "auth-emea-gtt-2026", engagementId: ENGAGEMENT_ID, enterpriseClientId: ENTERPRISE_ID, status: "pending-enterprise-signature", scopeSummary: "GTT circuit inventory for EMEA hubs", effectiveDate: null, expirationDate: null, carrierIds: ["provider-gtt"], siteIds: ["site-hub-amsterdam", "site-dc2-frankfurt"] },

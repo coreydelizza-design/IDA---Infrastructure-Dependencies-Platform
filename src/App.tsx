@@ -11,6 +11,7 @@ import { SiteInventoryPage } from "./components/SiteInventoryPage";
 import { TopNavigation } from "./components/TopNavigation";
 import { LoaWorkspace } from "./features/loa/LoaWorkspace";
 import { RequirementsPage } from "./features/requirements/RequirementsPage";
+import { ConnectorsPage } from "./features/connectors/ConnectorsPage";
 
 const pageTitles: Record<WorkspacePage, string> = {
   sites: "Sites",
@@ -128,6 +129,8 @@ function AppShell() {
           </>
         ) : registry.activePage === "loa" || registry.activePage === "carrier-engagements" ? (
           <LoaWorkspace />
+        ) : registry.activePage === "documents" ? (
+          <ConnectorsPage />
         ) : registry.activePage === "requirements" || registry.activePage === "dora" || registry.activePage === "ict" || registry.activePage === "compliance" ? (
           <RequirementsPage />
         ) : (

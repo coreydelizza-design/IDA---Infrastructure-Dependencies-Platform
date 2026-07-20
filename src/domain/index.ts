@@ -19,5 +19,6 @@ export * from "./audit";
 export * from "./assurance";
 export * from "./assessment";
 export * from "./assessmentProfiles";
+export * from "./connectors";
 export * from "./scoring";
 export * from "./models";
