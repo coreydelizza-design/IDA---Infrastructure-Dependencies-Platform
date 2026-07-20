@@ -2,6 +2,73 @@
 
 These instructions apply to the entire repository. They are binding unless the product owner explicitly overrides them in the current task.
 
+## Canonical product operating model
+
+IDA is a consultancy-operated Infrastructure Dependency Assurance
+registry. It is not a network monitoring, observability, NOC, incident,
+alerting, performance-management, or live-health platform.
+
+The primary operator is an authorized consultant working on behalf of an
+enterprise.
+
+The platform exists to:
+
+1. establish consultancy engagements;
+2. collect and structure enterprise site, carrier, circuit, hardware,
+   cloud, service, and dependency information;
+3. identify missing, contradictory, or unverified facts;
+4. obtain enterprise authorization for provider engagement;
+5. issue scoped requests to carriers and service providers;
+6. receive carrier confirmation, correction, dispute, and evidence;
+7. allow consultants to reconcile and verify claims;
+8. maintain an evidence-backed dependency registry;
+9. produce point-in-time assurance assessments and score snapshots;
+10. maintain risks, exceptions, remediation, and requirement mappings;
+11. support periodic revalidation and evidence freshness.
+
+Do not introduce:
+
+- live device polling;
+- SNMP or syslog collection;
+- NetFlow or packet capture;
+- real-time uptime or latency;
+- alarm dashboards;
+- incident correlation;
+- NOC workflows;
+- continuous interface status;
+- current up/down service indicators.
+
+External systems may contribute point-in-time inventory, exports, or
+evidence. Connector data must enter staging and reconciliation before it
+becomes canonical.
+
+The role model is:
+
+- consultancy users operate the registry and publish findings;
+- enterprise users provide data, approve scope, sign authorization,
+  review findings, and accept risk;
+- carrier users see only authorized requests and may confirm, correct,
+  dispute, or support specified facts;
+- carrier responses never directly alter published assessments without
+  consultant reconciliation.
+
+An enterprise-issued authorization permits the consultancy to work with
+specified carriers. Carrier acknowledgment is a separate state.
+
+The approved site-card and inspector aesthetic is binding. Preserve the
+visual design while changing monitoring-oriented semantics to
+assurance-oriented semantics.
+
+The primary measurements are:
+
+- architecture assurance;
+- assessment coverage;
+- evidence confidence;
+- residual risk.
+
+A score represents the documented and evidenced architecture at a point
+in time. It never represents live operational network condition.
+
 ## Read before editing
 
 1. `CODEX_HANDOFF.md`
