@@ -17,5 +17,7 @@ export * from "./sites";
 export * from "./authorization";
 export * from "./audit";
 export * from "./assurance";
+export * from "./assessment";
+export * from "./assessmentProfiles";
 export * from "./scoring";
 export * from "./models";

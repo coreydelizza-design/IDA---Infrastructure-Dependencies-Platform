@@ -1,9 +1,11 @@
 import type {
+  AssuranceSnapshot,
   AuditEvent,
   CarrierAcknowledgmentSummary,
   Circuit,
   CloudResource,
   ConsultancyOrganization,
+  ControlResult,
   CriticalService,
   DataGap,
   Dependency,
@@ -36,6 +38,8 @@ export interface RegistryDataset {
   evidence: EvidenceItem[];
   dataGaps: DataGap[];
   tasks: RegistryTask[];
+  controlResults: ControlResult[];
+  assuranceSnapshots: AssuranceSnapshot[];
   authorizations: EnterpriseAuthorizationSummary[];
   acknowledgments: CarrierAcknowledgmentSummary[];
   audit: AuditEvent[];

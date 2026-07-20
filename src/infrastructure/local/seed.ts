@@ -1,8 +1,10 @@
 import type {
   ActivityRecord,
+  AssuranceSnapshot,
   CardCarrierConnection,
   CardCriticalService,
   ComplianceMapping,
+  ControlResult,
   EvidenceBadge,
   EvidenceConfidence,
   HealthBand,
@@ -131,7 +133,7 @@ function buildSite(spec: SiteSpec): SiteRecord {
     safetyImpact: 1,
     regulatoryScope: [],
     registryState: registryStateForBadge(spec.evidenceBadge, spec.evidenceConfidence),
-    assessmentStatus: "provisional",
+    assessmentStatus: "published",
     completenessPercent: Math.round(60 + (documented / Math.max(total, 1)) * 40),
     lastVerifiedAt: spec.assessedAt,
     nextReviewAt: spec.nextReviewAt,
@@ -159,7 +161,7 @@ function buildSite(spec: SiteSpec): SiteRecord {
       assessedAt: spec.assessedAt,
       singleSiteApproved: spec.singleSiteApproved,
       technicalGapRetained: spec.technicalGapRetained,
-      provisional: true,
+      provisional: false,
     },
     carrierConnections: spec.carriers,
     dependencyCount: spec.dependencyCount,
@@ -171,9 +173,59 @@ function buildSite(spec: SiteSpec): SiteRecord {
     evidenceConfidence: spec.evidenceConfidence,
     evidenceConfidencePercent: spec.evidenceConfidencePercent,
     activity: commonActivity,
-    publicationState: "provisional",
+    publicationState: "publishable",
     tags: spec.tags,
   };
+}
+
+const ASSESSMENT_CONTROL_IDS = [
+  "connectivity-diversity", "power-resilience", "facility-resilience", "environmental-controls",
+  "physical-security", "workforce-availability", "cyber-resilience", "backup-recovery",
+];
+
+/**
+ * Seed stored control results + a published assurance snapshot per site so
+ * seeded scores are assessment-backed (non-provisional). The stored snapshot
+ * score is the last published value; "Run Assessment" recomputes from the
+ * control-result working set via the engine.
+ */
+function assessmentArtifacts(sites: SiteRecord[]): { controlResults: ControlResult[]; snapshots: AssuranceSnapshot[] } {
+  const controlResults: ControlResult[] = [];
+  const snapshots: AssuranceSnapshot[] = [];
+  for (const site of sites) {
+    const conf = site.evidenceConfidencePercent;
+    const singleCarrier = site.carrierConnections.length <= 1 && !site.score.singleSiteApproved;
+    const backed = conf >= 85;
+    for (const controlId of ASSESSMENT_CONTROL_IDS) {
+      let outcome: ControlResult["outcome"] = "pass";
+      if (controlId === "connectivity-diversity" && singleCarrier) outcome = site.score.band === "at-risk" ? "fail" : "partial";
+      else if (controlId === "backup-recovery" && conf < 85) outcome = "partial";
+      else if (site.score.band === "at-risk" && (controlId === "power-resilience" || controlId === "environmental-controls")) outcome = "partial";
+      controlResults.push({
+        siteId: site.id,
+        controlId,
+        outcome,
+        evidenceItemIds: backed ? [`ev-${site.id}-${controlId}`] : [],
+        verificationState: backed ? "consultant-verified" : "provider-claimed",
+      });
+    }
+    snapshots.push({
+      id: `snapshot-${site.id}`,
+      engagementId: site.engagementId,
+      siteId: site.id,
+      architectureAssuranceScore: site.score.score,
+      architectureAssuranceBand: site.score.band,
+      assessmentCoveragePercent: 100,
+      evidenceConfidencePercent: conf,
+      residualRiskCount: site.risks.filter((r) => r.status !== "closed").length,
+      publicationState: "publishable",
+      designConformance: site.score.singleSiteApproved ? "exception-approved" : singleCarrier ? "non-conformant" : "conformant",
+      profileVersion: "2026.1",
+      calculatedAt: site.score.assessedAt,
+      createdAt: NOW,
+    });
+  }
+  return { controlResults, snapshots };
 }
 
 function carrier(
@@ -299,6 +351,7 @@ function providersFromSites(sites: SiteRecord[]): Provider[] {
 
 export function buildSeedDataset(): RegistryDataset {
   const sites = siteSpecs.map(buildSite);
+  const { controlResults, snapshots } = assessmentArtifacts(sites);
   return {
     organizations: [
       { id: ORG_ID, name: "IDA Consulting", legalName: "IDA Consulting LLP", status: "active", primaryContactId: "user-engagement-lead", createdAt: NOW, updatedAt: NOW },
@@ -329,6 +382,8 @@ export function buildSeedDataset(): RegistryDataset {
     evidence: [],
     dataGaps: [],
     tasks: [],
+    controlResults,
+    assuranceSnapshots: snapshots,
     authorizations: [
       { id: "auth-uk-2026", engagementId: ENGAGEMENT_ID, enterpriseClientId: ENTERPRISE_ID, status: "active", scopeSummary: "BT circuit inventory and route evidence for UK sites", effectiveDate: "2026-01-01", expirationDate: "2026-12-31", carrierIds: ["provider-bt-global-services"], siteIds: ["site-dc1-london"] },
       { id: "auth-emea-gtt-2026", engagementId: ENGAGEMENT_ID, enterpriseClientId: ENTERPRISE_ID, status: "pending-enterprise-signature", scopeSummary: "GTT circuit inventory for EMEA hubs", effectiveDate: null, expirationDate: null, carrierIds: ["provider-gtt"], siteIds: ["site-hub-amsterdam", "site-dc2-frankfurt"] },

@@ -2,10 +2,12 @@
 // canonical fixture data or a concrete persistence implementation.
 
 import type {
+  AssuranceSnapshot,
   AuditEvent,
   CloudResource,
   ConsultancyOrganization,
   Circuit,
+  ControlResult,
   CriticalService,
   DataGap,
   Dependency,
@@ -88,6 +90,14 @@ export interface AuditRepository {
   append(event: AuditEvent): Promise<Result<AuditEvent>>;
 }
 
+export interface AssessmentRepository {
+  listControlResults(siteId: string): Promise<Result<ControlResult[]>>;
+  saveControlResults(siteId: string, results: ControlResult[]): Promise<Result<ControlResult[]>>;
+  listSnapshots(siteId: string): Promise<Result<AssuranceSnapshot[]>>;
+  latestSnapshot(siteId: string): Promise<Result<AssuranceSnapshot | null>>;
+  saveSnapshot(snapshot: AssuranceSnapshot): Promise<Result<AssuranceSnapshot>>;
+}
+
 /** The full set of registry repositories, resolved per data mode. */
 export interface RegistryRepositories {
   organizations: OrganizationRepository;
@@ -103,4 +113,5 @@ export interface RegistryRepositories {
   dataGaps: DataGapRepository;
   tasks: TaskRepository;
   audit: AuditRepository;
+  assessments: AssessmentRepository;
 }

@@ -122,6 +122,7 @@ function AppShell() {
                 onArchiveSite={() => registry.selectedSite && registry.archiveSite(registry.selectedSite.id)}
                 onDuplicateSite={() => registry.selectedSite && registry.duplicateAsDraft(registry.selectedSite.id)}
                 onMarkReviewComplete={() => registry.selectedSite && registry.markReviewComplete(registry.selectedSite.id)}
+                onRunAssessment={() => registry.selectedSite && registry.runAssessment(registry.selectedSite.id)}
               />
             ) : null}
           </>
