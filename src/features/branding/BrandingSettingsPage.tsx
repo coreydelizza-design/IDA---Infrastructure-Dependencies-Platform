@@ -1,6 +1,7 @@
-import { Palette, RotateCcw, Shield, Upload, X } from "lucide-react";
+import { Moon, Palette, RotateCcw, Shield, Sun, Upload, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { useRegistry } from "../../application/registryContext";
+import { useTheme, type Theme } from "../../application/theme";
 import {
   MAX_LOGO_DATA_URL_LENGTH,
   NEUTRAL_BRAND_NAME,
@@ -12,12 +13,17 @@ import {
 } from "../../domain";
 
 const TIERS: DeliveryTier[] = ["full", "lite"];
+const THEMES: Array<{ value: Theme; label: string; hint: string }> = [
+  { value: "dark", label: "Dark", hint: "Default" },
+  { value: "light", label: "Light", hint: "Neutral light" },
+];
 
 const MAX_KB = Math.round(MAX_LOGO_DATA_URL_LENGTH / 1024);
 
 export function BrandingSettingsPage() {
   const registry = useRegistry();
   const { branding, brandingConfig, currentEnterprise, updateBranding, resetBranding, tier, setTier } = registry;
+  const { theme, setTheme } = useTheme();
   const fileRef = useRef<HTMLInputElement>(null);
   const [logoInput, setLogoInput] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -98,6 +104,29 @@ export function BrandingSettingsPage() {
             >
               <strong>{TIER_LABELS[t]}</strong>
               <small>{t === "full" ? "All workspaces" : "Core registry only"}</small>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="tier-panel">
+        <div className="tier-panel-head">
+          <span className="eyebrow">Appearance</span>
+          <p>Screen mode for this browser. Dark is the default; light is a neutral alternate. This is a per-viewer preference and does not change the branding.</p>
+        </div>
+        <div className="tier-toggle" role="radiogroup" aria-label="Screen mode">
+          {THEMES.map((t) => (
+            <button
+              key={t.value}
+              type="button"
+              role="radio"
+              aria-checked={theme === t.value}
+              className={theme === t.value ? "active" : ""}
+              onClick={() => setTheme(t.value)}
+            >
+              {t.value === "dark" ? <Moon size={14} /> : <Sun size={14} />}
+              <strong>{t.label}</strong>
+              <small>{t.hint}</small>
             </button>
           ))}
         </div>
