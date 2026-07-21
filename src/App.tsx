@@ -88,6 +88,8 @@ function AppShell() {
     };
   }, []);
 
+  const home: WorkspacePage = capabilities.canSeeAllProjects ? "projects" : "dashboard";
+  const homeLabel = capabilities.canSeeAllProjects ? "Project Inventory" : "Dashboard";
   const pageGated = !registry.isPageAvailable(registry.activePage);
   // Consultant-only Project Inventory; a customer landing here is redirected to the registry.
   const showProjects = registry.activePage === "projects" && capabilities.canSeeAllProjects;
@@ -142,6 +144,7 @@ function AppShell() {
                 onDuplicateSite={() => registry.selectedSite && registry.duplicateAsDraft(registry.selectedSite.id)}
                 onMarkReviewComplete={() => registry.selectedSite && registry.markReviewComplete(registry.selectedSite.id)}
                 onRunAssessment={() => registry.selectedSite && registry.runAssessment(registry.selectedSite.id)}
+                canOperate={capabilities.canOperate}
               />
             ) : null}
           </>
@@ -162,7 +165,7 @@ function AppShell() {
         ) : registry.activePage === "requirements" || registry.activePage === "dora" || registry.activePage === "ict" || registry.activePage === "compliance" ? (
           <RequirementsPage />
         ) : (
-          <PlaceholderPage title={pageTitles[registry.activePage]} />
+          <PlaceholderPage title={pageTitles[registry.activePage]} onGoHome={() => registry.setActivePage(home)} homeLabel={homeLabel} />
         )}
       </div>
 
