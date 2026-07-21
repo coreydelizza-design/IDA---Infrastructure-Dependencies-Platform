@@ -25,6 +25,7 @@ import {
   Users,
 } from "lucide-react";
 import type { ComponentType } from "react";
+import { useRegistry } from "../application/registryContext";
 import type { WorkspacePage } from "../application/useRegistryState";
 
 interface SidebarProps {
@@ -92,10 +93,14 @@ const sections: SidebarSectionModel[] = [
 ];
 
 export function Sidebar({ activePage, onNavigate }: SidebarProps) {
+  const { isPageAvailable } = useRegistry();
+  const visibleSections = sections
+    .map((section) => ({ ...section, items: section.items.filter((item) => isPageAvailable(item.page)) }))
+    .filter((section) => section.items.length > 0);
   return (
     <aside className="sidebar" aria-label="Application navigation">
       <div className="sidebar-scroll">
-        {sections.map((section) => (
+        {visibleSections.map((section) => (
           <section className="sidebar-section" key={section.label}>
             <button className="sidebar-section-title" type="button">
               <span>{section.label}</span>

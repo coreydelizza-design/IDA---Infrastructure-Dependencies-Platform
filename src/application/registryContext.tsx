@@ -5,16 +5,19 @@ import { LocalStore } from "../infrastructure/local/localStore";
 import { buildSeedDataset, CANONICAL_IDS } from "../infrastructure/local/seed";
 import { createSupabaseRepositories, resolveDataMode, type DataMode } from "../infrastructure/supabase/client";
 import type {
+  BrandingConfig,
   CarrierAcknowledgmentSummary,
   ConsultancyOrganization,
+  DeliveryTier,
   Engagement,
   EnterpriseAuthorizationSummary,
   EnterpriseClient,
   PortfolioSummary,
+  ResolvedBranding,
   Site,
   SiteRecord,
 } from "../domain";
-import { presentSite } from "../domain";
+import { EMPTY_BRANDING, isPageAvailable as tierPageAvailable, presentSite, resolveBranding, resolveTier } from "../domain";
 
 /** Fixed portfolio summary for the full estate (preserves the approved KPI strip). */
 export const canonicalPortfolioSummary: PortfolioSummary = {
@@ -37,6 +40,17 @@ interface RegistryContextValue {
   engagements: Engagement[];
   currentEnterprise: EnterpriseClient | null;
   currentEngagement: Engagement | null;
+  /** Display-ready branding for the current enterprise (neutral defaults filled). */
+  branding: ResolvedBranding;
+  /** Raw stored branding for the current enterprise (empty strings = defaults). */
+  brandingConfig: BrandingConfig;
+  updateBranding: (patch: Partial<BrandingConfig>) => void;
+  resetBranding: () => void;
+  /** Resolved delivery tier for the current enterprise. */
+  tier: DeliveryTier;
+  setTier: (tier: DeliveryTier) => void;
+  /** Whether a workspace route is reachable under the current tier. */
+  isPageAvailable: (page: string) => boolean;
   sites: Site[];
   siteRecords: SiteRecord[];
   authorizations: EnterpriseAuthorizationSummary[];
@@ -120,6 +134,62 @@ export function RegistryProvider({ children }: { children: ReactNode }) {
     [engagements, selection.engagementId],
   );
 
+  const brandingConfig = useMemo<BrandingConfig>(
+    () => currentEnterprise?.branding ?? EMPTY_BRANDING,
+    [currentEnterprise],
+  );
+  const branding = useMemo<ResolvedBranding>(
+    () => resolveBranding({ branding: brandingConfig, enterpriseName: currentEnterprise?.name ?? null }),
+    [brandingConfig, currentEnterprise],
+  );
+
+  const updateBranding = useCallback(
+    (patch: Partial<BrandingConfig>) => {
+      const enterpriseId = currentEnterprise?.id;
+      if (!enterpriseId) return;
+      store.write((data) => {
+        const enterprise = data.enterpriseClients.find((e) => e.id === enterpriseId);
+        if (!enterprise) return;
+        const base = enterprise.branding ?? EMPTY_BRANDING;
+        enterprise.branding = { ...base, ...patch };
+        enterprise.updatedAt = new Date().toISOString();
+      });
+      refresh();
+    },
+    [store, currentEnterprise, refresh],
+  );
+
+  const resetBranding = useCallback(() => {
+    const enterpriseId = currentEnterprise?.id;
+    if (!enterpriseId) return;
+    store.write((data) => {
+      const enterprise = data.enterpriseClients.find((e) => e.id === enterpriseId);
+      if (!enterprise) return;
+      enterprise.branding = null;
+      enterprise.updatedAt = new Date().toISOString();
+    });
+    refresh();
+  }, [store, currentEnterprise, refresh]);
+
+  const tier = useMemo<DeliveryTier>(() => resolveTier(currentEnterprise?.tier), [currentEnterprise]);
+
+  const setTier = useCallback(
+    (next: DeliveryTier) => {
+      const enterpriseId = currentEnterprise?.id;
+      if (!enterpriseId) return;
+      store.write((data) => {
+        const enterprise = data.enterpriseClients.find((e) => e.id === enterpriseId);
+        if (!enterprise) return;
+        enterprise.tier = next;
+        enterprise.updatedAt = new Date().toISOString();
+      });
+      refresh();
+    },
+    [store, currentEnterprise, refresh],
+  );
+
+  const isPageAvailable = useCallback((page: string) => tierPageAvailable(page, tier), [tier]);
+
   const siteRecords = useMemo(
     () => dataset.sites.filter((s) => s.engagementId === currentEngagement?.id && s.archivedAt === null),
     [dataset, currentEngagement],
@@ -160,6 +230,13 @@ export function RegistryProvider({ children }: { children: ReactNode }) {
     engagements,
     currentEnterprise,
     currentEngagement,
+    branding,
+    brandingConfig,
+    updateBranding,
+    resetBranding,
+    tier,
+    setTier,
+    isPageAvailable,
     sites,
     siteRecords,
     authorizations: dataset.authorizations.filter((a) => a.engagementId === currentEngagement?.id),

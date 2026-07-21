@@ -76,8 +76,16 @@ export function resolveStorage(): StorageLike {
   return createMemoryStorage();
 }
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 const STORAGE_KEY = "ida.registry.v1";
+
+// v2 backfill: the canonical seeded enterprise carries explicit branding that
+// reproduces the approved locked wordmark. Installs seeded before v2 have no
+// branding field, which would flip the wordmark to the enterprise name — this
+// restores the exact locked baseline. Only the canonical seed record is touched;
+// user-created enterprises keep their (neutral / own-name) white-label default.
+const CANONICAL_ENTERPRISE_ID = "ent-enterprise-co";
+const LOCKED_SEED_BRANDING = { brandName: "ResiliLink", productLabel: "Site Resiliency Registry", logoUrl: null, logoAlt: "" };
 
 interface PersistedEnvelope {
   schemaVersion: number;
@@ -86,8 +94,14 @@ interface PersistedEnvelope {
 
 /** Forward migrations by schema version. Preserves user records. */
 function migrate(envelope: PersistedEnvelope): PersistedEnvelope {
-  let current = envelope;
-  // while (current.schemaVersion < SCHEMA_VERSION) { ...transform...; current.schemaVersion++ }
+  const current = envelope;
+  if (current.schemaVersion < 2) {
+    const seededEnterprise = current.data.enterpriseClients?.find((e) => e.id === CANONICAL_ENTERPRISE_ID);
+    if (seededEnterprise && (seededEnterprise.branding === undefined || seededEnterprise.branding === null)) {
+      seededEnterprise.branding = { ...LOCKED_SEED_BRANDING };
+    }
+    current.schemaVersion = 2;
+  }
   return current;
 }
 
@@ -115,8 +129,9 @@ export class LocalStore {
       return data;
     }
     const parsed = JSON.parse(raw) as PersistedEnvelope;
+    const priorVersion = parsed.schemaVersion;
     const migrated = migrate(parsed);
-    if (migrated.schemaVersion !== parsed.schemaVersion) this.persist(migrated);
+    if (migrated.schemaVersion !== priorVersion) this.persist(migrated);
     return migrated.data;
   }
 

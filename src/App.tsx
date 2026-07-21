@@ -5,6 +5,7 @@ import { SiteIntakeModal } from "./components/intake/SiteIntakeModal";
 import type { SiteRecord } from "./domain";
 import { AppFooter } from "./components/AppFooter";
 import { DetailPane } from "./components/DetailPane";
+import { LiteGatePage } from "./components/LiteGatePage";
 import { PlaceholderPage } from "./components/PlaceholderPage";
 import { Sidebar } from "./components/Sidebar";
 import { SiteInventoryPage } from "./components/SiteInventoryPage";
@@ -13,6 +14,7 @@ import { LoaWorkspace } from "./features/loa/LoaWorkspace";
 import { RequirementsPage } from "./features/requirements/RequirementsPage";
 import { ConnectorsPage } from "./features/connectors/ConnectorsPage";
 import { RegulatoryExportPage } from "./features/reports/RegulatoryExportPage";
+import { BrandingSettingsPage } from "./features/branding/BrandingSettingsPage";
 
 const pageTitles: Record<WorkspacePage, string> = {
   sites: "Sites",
@@ -76,7 +78,8 @@ function AppShell() {
     };
   }, []);
 
-  const showSiteWorkspace = registry.activePage === "sites";
+  const pageGated = !registry.isPageAvailable(registry.activePage);
+  const showSiteWorkspace = registry.activePage === "sites" && !pageGated;
 
   return (
     <div className="app-shell">
@@ -128,12 +131,16 @@ function AppShell() {
               />
             ) : null}
           </>
+        ) : pageGated ? (
+          <LiteGatePage title={pageTitles[registry.activePage]} onGoToInventory={() => registry.setActivePage("sites")} />
         ) : registry.activePage === "loa" || registry.activePage === "carrier-engagements" ? (
           <LoaWorkspace />
         ) : registry.activePage === "documents" ? (
           <ConnectorsPage />
         ) : registry.activePage === "reports" ? (
           <RegulatoryExportPage />
+        ) : registry.activePage === "administration" || registry.activePage === "configuration" ? (
+          <BrandingSettingsPage />
         ) : registry.activePage === "requirements" || registry.activePage === "dora" || registry.activePage === "ict" || registry.activePage === "compliance" ? (
           <RequirementsPage />
         ) : (

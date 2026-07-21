@@ -87,6 +87,8 @@ in time. It never represents live operational network condition.
 - Do not introduce Material UI, Ant Design, Bootstrap, generic admin templates, visible default shadcn styling, glassmorphism, a light theme, oversized radii, or marketing-style whitespace.
 - `docs/reference-site-inventory.png` is the product authority. The Playwright snapshot is a regression baseline, not permission to preserve known drift from the authority.
 - Never update the reference image or Playwright snapshot automatically. A baseline change requires explicit product-owner approval and a written visual-gap rationale.
+- The product is white-labelled with a **neutral** aesthetic (see `docs/WHITE_LABEL_BRANDING.md`). Branding is configuration limited to the brand slot (wordmark, subtitle, logo) — never a customer accent colour, theme, or layout change. The seeded enterprise reproduces the locked wordmark so the default render stays identical to the baseline.
+- **Lite mode** (see `docs/LITE_MODE.md`) is a per-enterprise delivery tier that hides advanced workspaces over the same locked shell. It is a route/nav gate only — never a domain fork, scoring change, or edit to the locked hero. Tier defaults to `full`, so the baseline render is unchanged; the Administration route is never gated.
 
 ## Domain rules
 

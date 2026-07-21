@@ -2943,3 +2943,48 @@ select {
 .export-req-row strong { color: var(--ink-200); font-size: 9.5px; }
 .export-req-row span { color: var(--ink-300); font-size: 9.5px; }
 .export-req-row em { font-style: normal; font-size: 9px; font-weight: 600; text-transform: capitalize; }
+
+/* White-label brand logo (only rendered when a customer logo is configured;
+   the neutral/seeded default keeps the locked Shield wordmark untouched). */
+.brand-logo { display: block; width: auto; height: 28px; max-width: 132px; object-fit: contain; }
+.brand.has-logo .brand-mark { width: auto; max-width: 136px; height: 30px; filter: none; }
+
+/* Branding settings (Administration) */
+.branding-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(300px, 0.9fr); gap: 14px; margin-top: 18px; }
+.branding-fields { display: grid; gap: 14px; align-content: start; padding: 18px; border: 1px solid var(--border-default); border-radius: 6px; background: rgba(8, 27, 47, 0.82); }
+.branding-field { display: grid; gap: 5px; }
+.branding-field > span { color: var(--ink-200); font-size: 10px; font-weight: 600; }
+.branding-field input[type="text"] { height: 34px; padding: 0 10px; border: 1px solid var(--border-default); border-radius: 5px; background: var(--navy-850); color: var(--ink-050); font-size: 11px; }
+.branding-field input[type="text"]:focus { outline: none; border-color: var(--border-strong); }
+.branding-field input:disabled { opacity: 0.5; }
+.branding-field small { color: var(--ink-500); font-size: 8.6px; }
+.branding-logo-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.branding-url-row { display: flex; gap: 8px; }
+.branding-url-row input { flex: 1; }
+.branding-error { margin: 0; color: #ff9b9b; font-size: 9.5px; }
+.branding-note { margin: 2px 0 0; color: var(--ink-500); font-size: 8.8px; line-height: 1.5; }
+
+.branding-preview { display: grid; gap: 10px; align-content: start; padding: 18px; border: 1px solid var(--border-default); border-radius: 6px; background: linear-gradient(180deg, #102943 0%, #0b2036 100%); }
+.branding-preview-label { color: var(--ink-400); font-size: 9px; font-weight: 650; letter-spacing: 0.5px; text-transform: uppercase; }
+.branding-preview-header { display: flex; align-items: center; height: 51px; padding: 0 8px; border: 1px solid var(--border-default); border-radius: 6px; background: linear-gradient(180deg, var(--navy-875) 0%, #061528 100%); }
+.branding-preview-meta { display: flex; align-items: center; gap: 7px; color: var(--ink-500); font-size: 8.8px; }
+.branding-preview-meta svg { color: var(--blue-300); flex-shrink: 0; }
+
+/* Delivery mode (lite/full tier) */
+.tier-panel { display: grid; gap: 10px; margin-top: 18px; padding: 16px 18px; border: 1px solid var(--border-default); border-radius: 6px; background: rgba(8, 27, 47, 0.82); }
+.tier-panel-head p { margin: 4px 0 0; color: var(--ink-400); font-size: 9.5px; line-height: 1.5; }
+.tier-toggle { display: flex; gap: 8px; }
+.tier-toggle button { display: grid; gap: 2px; min-width: 150px; padding: 9px 14px; text-align: left; border: 1px solid var(--border-default); border-radius: 5px; background: var(--navy-850); cursor: pointer; }
+.tier-toggle button strong { color: var(--ink-100); font-size: 11px; font-weight: 600; }
+.tier-toggle button small { color: var(--ink-500); font-size: 8.4px; }
+.tier-toggle button.active { border-color: #4b94ff; background: linear-gradient(180deg, #123253 0%, #0c2440 100%); }
+.tier-toggle button.active strong { color: var(--ink-050); }
+.tier-toggle button:disabled { opacity: 0.5; cursor: default; }
+
+/* Lite-tier gate for a full-only workspace */
+.lite-gate-page { display: grid; place-items: center; }
+.lite-gate-card { display: grid; justify-items: center; gap: 8px; max-width: 460px; padding: 34px; text-align: center; border: 1px solid var(--border-default); border-radius: 8px; background: rgba(8, 27, 47, 0.82); }
+.lite-gate-icon { display: grid; place-items: center; width: 46px; height: 46px; margin-bottom: 4px; border-radius: 50%; color: var(--blue-300); background: rgba(47, 121, 246, 0.12); border: 1px solid var(--border-strong); }
+.lite-gate-card h1 { margin: 2px 0 0; color: white; font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+.lite-gate-card p { margin: 0; color: var(--ink-400); font-size: 10px; line-height: 1.6; }
+.lite-gate-card .primary-button { margin-top: 8px; }

@@ -357,7 +357,10 @@ export function buildSeedDataset(): RegistryDataset {
       { id: ORG_ID, name: "IDA Consulting", legalName: "IDA Consulting LLP", status: "active", primaryContactId: "user-engagement-lead", createdAt: NOW, updatedAt: NOW },
     ],
     enterpriseClients: [
-      { id: ENTERPRISE_ID, consultancyOrganizationId: ORG_ID, name: "Enterprise Co.", legalName: "Enterprise Co. PLC", industry: "Financial Services", headquartersCountry: "UK", status: "active", externalReference: "CRM-4821", createdAt: NOW, updatedAt: NOW },
+      // The seeded enterprise reproduces the approved locked wordmark exactly, so
+      // the default render is pixel-identical to the visual baseline (see
+      // docs/UI_LOCK.md). White-label branding is purely additive on top of this.
+      { id: ENTERPRISE_ID, consultancyOrganizationId: ORG_ID, name: "Enterprise Co.", legalName: "Enterprise Co. PLC", industry: "Financial Services", headquartersCountry: "UK", status: "active", externalReference: "CRM-4821", branding: { brandName: "ResiliLink", productLabel: "Site Resiliency Registry", logoUrl: null, logoAlt: "" }, createdAt: NOW, updatedAt: NOW },
     ],
     engagements: [
       { id: ENGAGEMENT_ID, consultancyOrganizationId: ORG_ID, enterpriseClientId: ENTERPRISE_ID, name: "Global Infrastructure Assurance 2026", code: "ENG-2026-001", description: "Point-in-time dependency assurance across the global estate.", status: "data-collection", scopeStatement: "128 sites across 23 countries; carrier, circuit, facility, cloud, and service dependencies.", startDate: "2026-01-05", targetCompletionDate: "2026-09-30", reviewCadence: "quarterly", leadConsultantUserId: "user-engagement-lead", createdAt: NOW, updatedAt: NOW },

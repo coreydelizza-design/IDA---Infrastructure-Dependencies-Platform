@@ -1,5 +1,8 @@
 // Consultancy and enterprise organization aggregates.
 
+import type { BrandingConfig } from "./branding";
+import type { DeliveryTier } from "./tier";
+
 export type ConsultancyOrganizationStatus = "active" | "suspended" | "archived";
 
 export interface ConsultancyOrganization {
@@ -23,6 +26,10 @@ export interface EnterpriseClient {
   headquartersCountry: string;
   status: EnterpriseClientStatus;
   externalReference: string | null;
+  /** White-label branding overrides. Null/absent → neutral defaults + this name. */
+  branding?: BrandingConfig | null;
+  /** Delivery tier. Null/absent → "full". "lite" hides advanced workspaces. */
+  tier?: DeliveryTier | null;
   createdAt: string;
   updatedAt: string;
 }
