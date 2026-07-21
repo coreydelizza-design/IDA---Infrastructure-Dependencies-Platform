@@ -65,4 +65,192 @@
     rgba(3, 12, 25, 0.28) 36%,
     rgba(3, 12, 25, 0.94) 100%
   );
+  /* Extended palette — Phase A token migration. Each token holds the EXACT
+     dark value it replaced (zero visual change); light-theme values layer on
+     in a later phase. Grouped by role: navy/steel = surfaces & lines, ink = text,
+     blue = accents, green/lime/amber/red/purple = status. */
+  /* navy */
+  --navy-p01: #010714;
+  --navy-p02: #010816;
+  --navy-p03: #020b18;
+  --navy-p04: #061528;
+  --navy-p05: #081528;
+  --navy-p06: #06182b;
+  --navy-p07: #07182b;
+  --navy-p08: #0a1929;
+  --navy-p09: #0a192c;
+  --navy-p10: #081a2e;
+  --navy-p11: #0c1b2e;
+  --navy-p12: #0c1e33;
+  --navy-p13: #0c1f34;
+  --navy-p14: #0a2037;
+  --navy-p15: #0b2036;
+  --navy-p16: #0b2037;
+  --navy-p17: #0f2238;
+  --navy-p18: #10233a;
+  --navy-p19: #0c2440;
+  --navy-p20: #13243a;
+  --navy-p21: #102540;
+  --navy-p22: #14263c;
+  --navy-p23: #102943;
+  --navy-p24: #14283e;
+  --navy-p25: #0e294a;
+  --navy-p26: #102a45;
+  --navy-p27: #092a59;
+  --navy-p28: #142b45;
+  --navy-p29: #182c45;
+  --navy-p30: #142f53;
+  --navy-p31: #123253;
+  --navy-p32: #1c3049;
+  --navy-p33: #1b3551;
+  --navy-p34: #15365e;
+  --navy-p35: #1c3653;
+  --navy-p36: #0d3a79;
+  --navy-p37: #1f3a57;
+  --navy-p38: #203a55;
+  --navy-p39: #203b58;
+  --navy-p40: #233b56;
+  --navy-p41: #203c5a;
+  --navy-p42: #24415f;
+  --navy-p43: #23425f;
+  --navy-p44: #26425e;
+  --navy-p45: #29425b;
+  --navy-p46: #29435f;
+  /* steel */
+  --steel-p01: #36526f;
+  --steel-p02: #41648a;
+  /* ink */
+  --ink-p01: #6f8297;
+  --ink-p02: #7e91a6;
+  --ink-p03: #7f92a8;
+  --ink-p04: #8293a6;
+  --ink-p05: #8496aa;
+  --ink-p06: #8b9bad;
+  --ink-p07: #94a6b9;
+  --ink-p08: #9cabbc;
+  --ink-p09: #b4c0ce;
+  --ink-p10: #b8c5d2;
+  --ink-p11: #b9c6d4;
+  --ink-p12: #c6cfd8;
+  --ink-p13: #c4d0dc;
+  --ink-p14: #c6d2df;
+  --ink-p15: #d0dae5;
+  --ink-p16: #d5dee8;
+  --ink-p17: #d2dfec;
+  --ink-p18: #d4dfeb;
+  --ink-p19: #e8f2ff;
+  --ink-p20: #e9f3ff;
+  /* blue */
+  --blue-p01: #2f79ed;
+  --blue-p02: #438eff;
+  --blue-p03: #4b94ff;
+  --blue-p04: #69b8ff;
+  --blue-p05: #75bcff;
+  --blue-p06: #80bfff;
+  /* lime */
+  --lime-p01: #8ad53d;
+  --lime-p02: #84ef8f;
+  /* amber */
+  --amber-p01: #ffd45d;
+  --amber-p02: #ffd55b;
+  /* red */
+  --red-p01: #ff8a7f;
+  --red-p02: #ff8b82;
+  --red-p03: #ff8d84;
+  --red-p04: #ff9b9b;
+  /* purple */
+  --purple-p01: #ae83ff;
+  --purple-p02: #bb9aff;
+  /* Overlay & tint palette — Phase A (rgba). Exact alpha values preserved
+     (zero visual change). ov-navy/scrim = dark fills & shadows; tint-* = status
+     wash backgrounds. Light-theme values layer on later. */
+  /* ov-navy */
+  --ov-navy-a01: rgba(0, 5, 13, 0.78);
+  --ov-navy-a02: rgba(2, 10, 20, 0.24);
+  --ov-navy-a03: rgba(2, 10, 22, 0.13);
+  --ov-navy-a04: rgba(2, 10, 22, 0.24);
+  --ov-navy-a05: rgba(2, 10, 22, 0.67);
+  --ov-navy-a06: rgba(3, 12, 24, 0.34);
+  --ov-navy-a07: rgba(4, 15, 28, 0.55);
+  --ov-navy-a08: rgba(4, 15, 28, 0.56);
+  --ov-navy-a09: rgba(4, 17, 31, 0.98);
+  --ov-navy-a10: rgba(5, 18, 33, 0.3);
+  --ov-navy-a11: rgba(5, 19, 34, 0.55);
+  --ov-navy-a12: rgba(6, 19, 34, 0.42);
+  --ov-navy-a13: rgba(6, 20, 36, 0.72);
+  --ov-navy-a14: rgba(6, 20, 36, 0.88);
+  --ov-navy-a15: rgba(6, 21, 38, 0.75);
+  --ov-navy-a16: rgba(8, 21, 40, 0.5);
+  --ov-navy-a17: rgba(8, 21, 40, 0.6);
+  --ov-navy-a18: rgba(7, 23, 41, 0.9);
+  --ov-navy-a19: rgba(8, 25, 43, 0.99);
+  --ov-navy-a20: rgba(8, 26, 45, 0.38);
+  --ov-navy-a21: rgba(10, 26, 45, 0.95);
+  --ov-navy-a22: rgba(8, 27, 47, 0.82);
+  --ov-navy-a23: rgba(10, 28, 47, 0.2);
+  --ov-navy-a24: rgba(142, 44, 37, 0.45);
+  --ov-navy-a25: rgba(142, 44, 37, 0.64);
+  --ov-navy-a26: rgba(143, 47, 40, 0.45);
+  --ov-navy-a27: rgba(75, 84, 94, 0.32);
+  --ov-navy-a28: rgba(138, 96, 0, 0.35);
+  --ov-navy-a29: rgba(138, 96, 0, 0.45);
+  --ov-navy-a30: rgba(138, 96, 0, 0.6);
+  --ov-navy-a31: rgba(142, 102, 12, 0.28);
+  --ov-navy-a32: rgba(171, 182, 193, 0.45);
+  --ov-navy-a33: rgba(183, 201, 220, 0.18);
+  /* scrim */
+  --scrim-a01: rgba(0, 0, 0, 0.12);
+  --scrim-a02: rgba(0, 0, 0, 0.18);
+  --scrim-a03: rgba(0, 0, 0, 0.22);
+  --scrim-a04: rgba(0, 0, 0, 0.5);
+  --scrim-a05: rgba(0, 0, 0, 0.55);
+  /* tint-blue */
+  --tint-blue-a01: rgba(12, 33, 54, 0.66);
+  --tint-blue-a02: rgba(12, 35, 60, 0.62);
+  --tint-blue-a03: rgba(17, 42, 68, 0.55);
+  --tint-blue-a04: rgba(17, 42, 68, 0.98);
+  --tint-blue-a05: rgba(28, 52, 78, 0.42);
+  --tint-blue-a06: rgba(25, 53, 82, 0.75);
+  --tint-blue-a07: rgba(22, 58, 94, 0.18);
+  --tint-blue-a08: rgba(31, 56, 84, 0.55);
+  --tint-blue-a09: rgba(30, 57, 84, 0.65);
+  --tint-blue-a10: rgba(33, 61, 89, 0.72);
+  --tint-blue-a11: rgba(25, 63, 102, 0.13);
+  --tint-blue-a12: rgba(33, 62, 91, 0.68);
+  --tint-blue-a13: rgba(28, 67, 109, 0.32);
+  --tint-blue-a14: rgba(35, 66, 96, 0.58);
+  --tint-blue-a15: rgba(35, 66, 96, 0.75);
+  --tint-blue-a16: rgba(35, 66, 96, 0.8);
+  --tint-blue-a17: rgba(36, 66, 96, 0.8);
+  --tint-blue-a18: rgba(73, 44, 138, 0.28);
+  --tint-blue-a19: rgba(16, 77, 172, 0.25);
+  --tint-blue-a20: rgba(24, 82, 133, 0.28);
+  --tint-blue-a21: rgba(24, 82, 133, 0.38);
+  --tint-blue-a22: rgba(84, 48, 161, 0.34);
+  --tint-blue-a23: rgba(52, 87, 124, 0.28);
+  --tint-blue-a24: rgba(76, 96, 118, 0.42);
+  --tint-blue-a25: rgba(72, 97, 126, 0.66);
+  --tint-blue-a26: rgba(72, 99, 129, 0.38);
+  --tint-blue-a27: rgba(47, 121, 246, 0.12);
+  --tint-blue-a28: rgba(47, 125, 246, 0.16);
+  --tint-blue-a29: rgba(47, 125, 246, 0.35);
+  --tint-blue-a30: rgba(58, 137, 255, 0.18);
+  --tint-blue-a31: rgba(59, 156, 243, 0.45);
+  --tint-blue-a32: rgba(59, 156, 243, 0.5);
+  --tint-blue-a33: rgba(59, 156, 243, 0.55);
+  --tint-blue-a34: rgba(77, 145, 255, 0.18);
+  /* tint-green */
+  --tint-green-a01: rgba(18, 91, 42, 0.22);
+  --tint-green-a02: rgba(25, 119, 53, 0.28);
+  --tint-green-a03: rgba(25, 119, 53, 0.55);
+  --tint-green-a04: rgba(27, 119, 57, 0.28);
+  --tint-green-a05: rgba(37, 123, 58, 0.22);
+  --tint-green-a06: rgba(88, 223, 106, 0.38);
+  --tint-green-a07: rgba(88, 223, 106, 0.5);
+  --tint-green-a08: rgba(88, 223, 106, 0.75);
+  /* tint-amber */
+  --tint-amber-a01: rgba(214, 158, 46, 0.08);
+  /* tint-purple */
+  --tint-purple-a01: rgba(138, 92, 246, 0.45);
+  --tint-purple-a02: rgba(138, 92, 246, 0.55);
 }

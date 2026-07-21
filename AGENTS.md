@@ -89,6 +89,7 @@ in time. It never represents live operational network condition.
 - Never update the reference image or Playwright snapshot automatically. A baseline change requires explicit product-owner approval and a written visual-gap rationale.
 - The product is white-labelled with a **neutral** aesthetic (see `docs/WHITE_LABEL_BRANDING.md`). Branding is configuration limited to the brand slot (wordmark, subtitle, logo) — never a customer accent colour, theme, or layout change. The seeded enterprise reproduces the locked wordmark so the default render stays identical to the baseline.
 - **Lite mode** (see `docs/LITE_MODE.md`) is a per-enterprise delivery tier that hides advanced workspaces over the same locked shell. It is a route/nav gate only — never a domain fork, scoring change, or edit to the locked hero. Tier defaults to `full`, so the baseline render is unchanged; the Administration route is never gated.
+- **Colors are token-driven** (see `docs/THEME_TOKENS.md`). `app.css` contains no hardcoded color literals — always add or reuse a `--token` in `tokens.css`, never a raw hex/rgba. The **dark token values are the locked baseline**; changing a dark value is a baseline change requiring product-owner approval. A light theme (when added) is an opt-in `:root[data-theme="light"]` override layer; dark stays the default.
 
 ## Domain rules
 
