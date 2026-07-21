@@ -8,6 +8,7 @@ import type {
   BrandingConfig,
   CarrierAcknowledgmentSummary,
   ConsultancyOrganization,
+  Contract,
   DeliveryTier,
   Engagement,
   EnterpriseAuthorizationSummary,
@@ -60,6 +61,8 @@ interface RegistryContextValue {
   siteRecords: SiteRecord[];
   authorizations: EnterpriseAuthorizationSummary[];
   acknowledgments: CarrierAcknowledgmentSummary[];
+  /** Contract repository (MSAs etc.) for the current enterprise. */
+  contracts: Contract[];
   portfolioSummary: PortfolioSummary;
   selectEnterprise: (enterpriseId: string) => void;
   selectEngagement: (engagementId: string) => void;
@@ -263,6 +266,7 @@ export function RegistryProvider({ children }: { children: ReactNode }) {
     siteRecords,
     authorizations: dataset.authorizations.filter((a) => a.engagementId === currentEngagement?.id),
     acknowledgments: dataset.acknowledgments,
+    contracts: dataset.contracts.filter((c) => c.enterpriseClientId === currentEnterprise?.id),
     portfolioSummary: canonicalPortfolioSummary,
     selectEnterprise,
     selectEngagement,

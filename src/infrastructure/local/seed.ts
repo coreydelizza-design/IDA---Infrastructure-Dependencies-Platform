@@ -4,6 +4,7 @@ import type {
   CardCarrierConnection,
   CardCriticalService,
   ComplianceMapping,
+  Contract,
   ControlResult,
   Engagement,
   EnterpriseClient,
@@ -368,6 +369,17 @@ export const DEMO_ENGAGEMENTS: Engagement[] = [
   { id: "eng-2026-040", consultancyOrganizationId: ORG_ID, enterpriseClientId: "ent-atlas", name: "Edge Network Baseline", code: "ENG-2026-040", description: "Baseline dependency registry for distribution-center edge sites.", status: "published", scopeStatement: "58 distribution-center edge sites; connectivity and wireless-failover dependencies.", startDate: "2025-09-15", targetCompletionDate: "2026-04-30", reviewCadence: "annual", leadConsultantUserId: "user-engagement-lead", createdAt: NOW, updatedAt: NOW },
 ];
 
+// Contract repository seed — MSAs and related instruments per enterprise client.
+export const DEMO_CONTRACTS: Contract[] = [
+  { id: "ct-msa-enterprise-co", enterpriseClientId: ENTERPRISE_ID, engagementId: null, type: "msa", title: "Master Service Agreement", reference: "MSA-2025-0042", status: "active", counterparty: "Enterprise Co. PLC", effectiveDate: "2025-06-01", expirationDate: "2027-05-31", documentName: "MSA_EnterpriseCo_2025.pdf", notes: "Governs all assurance engagements.", createdAt: NOW, updatedAt: NOW },
+  { id: "ct-sow-enterprise-co-2026", enterpriseClientId: ENTERPRISE_ID, engagementId: ENGAGEMENT_ID, type: "sow", title: "SOW — Global Infrastructure Assurance 2026", reference: "SOW-2026-001", status: "active", counterparty: "Enterprise Co. PLC", effectiveDate: "2026-01-05", expirationDate: "2026-09-30", documentName: "SOW_2026-001.pdf", notes: "Scope: 128 sites / 23 countries.", createdAt: NOW, updatedAt: NOW },
+  { id: "ct-dpa-enterprise-co", enterpriseClientId: ENTERPRISE_ID, engagementId: null, type: "dpa", title: "Data Processing Agreement", reference: "DPA-2025-0042", status: "active", counterparty: "Enterprise Co. PLC", effectiveDate: "2025-06-01", expirationDate: "2027-05-31", documentName: "DPA_EnterpriseCo.pdf", notes: "", createdAt: NOW, updatedAt: NOW },
+  { id: "ct-msa-northwind", enterpriseClientId: "ent-northwind", engagementId: null, type: "msa", title: "Master Service Agreement", reference: "MSA-2026-0110", status: "active", counterparty: "Northwind Trading Group Ltd", effectiveDate: "2026-02-15", expirationDate: "2028-02-14", documentName: "MSA_Northwind.pdf", notes: "", createdAt: NOW, updatedAt: NOW },
+  { id: "ct-msa-meridian", enterpriseClientId: "ent-meridian", engagementId: null, type: "msa", title: "Master Service Agreement", reference: "MSA-2025-0098", status: "active", counterparty: "Meridian Health Systems Inc", effectiveDate: "2025-09-01", expirationDate: "2027-08-31", documentName: "MSA_Meridian.pdf", notes: "", createdAt: NOW, updatedAt: NOW },
+  { id: "ct-msa-atlas", enterpriseClientId: "ent-atlas", engagementId: null, type: "msa", title: "Master Service Agreement", reference: "MSA-2024-0071", status: "expiring", counterparty: "Atlas Logistics International GmbH", effectiveDate: "2024-08-01", expirationDate: "2026-07-31", documentName: "MSA_Atlas.pdf", notes: "Renewal in progress.", createdAt: NOW, updatedAt: NOW },
+  { id: "ct-nda-atlas", enterpriseClientId: "ent-atlas", engagementId: null, type: "nda", title: "Mutual NDA", reference: "NDA-2024-0071", status: "active", counterparty: "Atlas Logistics International GmbH", effectiveDate: "2024-07-15", expirationDate: "2029-07-14", documentName: "NDA_Atlas.pdf", notes: "", createdAt: NOW, updatedAt: NOW },
+];
+
 export function buildSeedDataset(): RegistryDataset {
   const sites = siteSpecs.map(buildSite);
   const { controlResults, snapshots } = assessmentArtifacts(sites);
@@ -419,6 +431,7 @@ export function buildSeedDataset(): RegistryDataset {
       { id: "ack-uk-bt", authorizationId: "auth-uk-2026", carrierId: "provider-bt-global-services", status: "accepted", receivedAt: "2026-01-08", notes: "" },
       { id: "ack-emea-gtt", authorizationId: "auth-emea-gtt-2026", carrierId: "provider-gtt", status: "not-submitted", receivedAt: null, notes: "" },
     ],
+    contracts: [...DEMO_CONTRACTS],
     audit: [
       { id: "audit-seed", engagementId: ENGAGEMENT_ID, actorUserId: "user-engagement-lead", actorRole: "engagement-lead", entityType: "engagement", entityId: ENGAGEMENT_ID, action: "engagement-created", timestamp: NOW, beforeSummary: null, afterSummary: "Engagement seeded", source: "seed" },
     ],
