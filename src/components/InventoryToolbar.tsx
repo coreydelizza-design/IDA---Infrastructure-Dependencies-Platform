@@ -15,7 +15,7 @@ interface InventoryToolbarProps {
   onCountryFilterChange: (value: string) => void;
   onHealthFilterChange: (value: string) => void;
   onViewChange: (view: InventoryView) => void;
-  onAddSite: () => void;
+  onAddSite?: () => void;
 }
 
 function unique(values: string[]): string[] {
@@ -101,10 +101,12 @@ export function InventoryToolbar({
         <button type="button" className={view === "list" ? "active" : ""} onClick={() => onViewChange("list")} aria-label="List view"><List size={17} /></button>
       </div>
 
-      <button className="add-site-button" type="button" onClick={onAddSite}>
-        <Plus size={17} />
-        <span>Add Site</span>
-      </button>
+      {onAddSite ? (
+        <button className="add-site-button" type="button" onClick={onAddSite}>
+          <Plus size={17} />
+          <span>Add Site</span>
+        </button>
+      ) : null}
     </div>
   );
 }

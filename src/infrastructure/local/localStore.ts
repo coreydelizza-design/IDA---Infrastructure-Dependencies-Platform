@@ -1,3 +1,4 @@
+import { DEMO_ENGAGEMENTS, DEMO_ENTERPRISES } from "./seed";
 import type {
   AssuranceSnapshot,
   AuditEvent,
@@ -76,7 +77,7 @@ export function resolveStorage(): StorageLike {
   return createMemoryStorage();
 }
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 const STORAGE_KEY = "ida.registry.v1";
 
 // v2 backfill: the canonical seeded enterprise carries explicit branding that
@@ -101,6 +102,16 @@ function migrate(envelope: PersistedEnvelope): PersistedEnvelope {
       seededEnterprise.branding = { ...LOCKED_SEED_BRANDING };
     }
     current.schemaVersion = 2;
+  }
+  if (current.schemaVersion < 3) {
+    // v3: add the demo portfolio (extra enterprises + engagements) so the
+    // Project Inventory has a realistic multi-project view. Injected by id only
+    // if absent, so user-created records and prior demo edits are preserved.
+    const entIds = new Set((current.data.enterpriseClients ?? []).map((e) => e.id));
+    for (const e of DEMO_ENTERPRISES) if (!entIds.has(e.id)) current.data.enterpriseClients.push({ ...e });
+    const engIds = new Set((current.data.engagements ?? []).map((e) => e.id));
+    for (const g of DEMO_ENGAGEMENTS) if (!engIds.has(g.id)) current.data.engagements.push({ ...g });
+    current.schemaVersion = 3;
   }
   return current;
 }

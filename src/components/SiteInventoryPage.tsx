@@ -24,7 +24,8 @@ interface SiteInventoryPageProps {
   onViewChange: (view: InventoryView) => void;
   onSelectSite: (siteId: string) => void;
   onToggleFavorite: (siteId: string) => void;
-  onAddSite: () => void;
+  /** Omitted for read-only (customer) viewers — hides all "add site" affordances. */
+  onAddSite?: () => void;
 }
 
 export function SiteInventoryPage({
@@ -92,7 +93,7 @@ export function SiteInventoryPage({
                 onToggleFavorite={() => onToggleFavorite(site.id)}
               />
             ))}
-            <AddSiteCard onClick={onAddSite} />
+            {onAddSite ? <AddSiteCard onClick={onAddSite} /> : null}
           </div>
         ) : (
           <div className="site-list">

@@ -1,9 +1,11 @@
 import { useCallback, useMemo, useState } from "react";
 import { useRegistry } from "./registryContext";
+import { readStoredPersona } from "./persona";
 import { assessSite, getAssessmentProfile, snapshotFromResult } from "../domain";
 import type { AuditEvent, DetailTab, InventoryView, RoleMode, Site, SiteRecord } from "../domain";
 
 export type WorkspacePage =
+  | "projects"
   | "sites"
   | "dashboard"
   | "critical-services"
@@ -53,7 +55,10 @@ export function useRegistryState() {
   const [activeTab, setActiveTab] = useState<DetailTab>((initialParam("tab") as DetailTab) ?? "overview");
   const [inventoryView, setInventoryView] = useState<InventoryView>((initialParam("view") as InventoryView) ?? "grid");
   const [roleMode, setRoleMode] = useState<RoleMode>((initialParam("mode") as RoleMode) ?? "loa");
-  const [activePage, setActivePage] = useState<WorkspacePage>("sites");
+  // Consultants land on their Project Inventory; customers land in the registry.
+  const [activePage, setActivePage] = useState<WorkspacePage>(
+    () => (initialParam("page") as WorkspacePage) ?? (readStoredPersona() === "customer" ? "sites" : "projects"),
+  );
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("all");
@@ -223,6 +228,10 @@ export function useRegistryState() {
     engagementId: currentEngagement?.id ?? null,
     tier: registry.tier,
     isPageAvailable: registry.isPageAvailable,
+    projects: registry.projects,
+    selectProject: registry.selectProject,
+    currentEngagement: registry.currentEngagement,
+    currentEnterprise: registry.currentEnterprise,
     setActivePage,
     setSearch,
     setTypeFilter,

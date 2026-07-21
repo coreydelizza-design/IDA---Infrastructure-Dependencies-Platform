@@ -1,7 +1,8 @@
-import { Bell, ChevronDown, CircleCheckBig, Shield, UserRound } from "lucide-react";
+import { Bell, ChevronDown, CircleCheckBig, FolderKanban, Shield, UserRound } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { RoleMode } from "../domain/models";
 import { useRegistry } from "../application/registryContext";
+import { usePersona } from "../application/persona";
 import type { WorkspacePage } from "../application/useRegistryState";
 
 interface TopNavigationProps {
@@ -11,6 +12,10 @@ interface TopNavigationProps {
   onRoleModeChange: (mode: RoleMode) => void;
 }
 
+// Note: the primary nav mirrors the locked reference exactly. "Return to
+// projects" is deliberately NOT a top-nav item (that would alter the locked
+// Site Inventory header) — it lives on the brand (home) and in the tenant
+// popover instead.
 const topItems: Array<{ label: string; page: WorkspacePage }> = [
   { label: "Sites", page: "sites" },
   { label: "Network", page: "network" },
@@ -23,7 +28,7 @@ const topItems: Array<{ label: string; page: WorkspacePage }> = [
 
 const engagementStatusLabel = (status: string) => status.replaceAll("-", " ");
 
-function TenantSelector() {
+function TenantSelector({ onViewAllProjects }: { onViewAllProjects?: () => void }) {
   const registry = useRegistry();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -47,6 +52,11 @@ function TenantSelector() {
       </button>
       {open ? (
         <div className="tenant-popover" role="dialog" aria-label="Engagement context">
+          {onViewAllProjects ? (
+            <button type="button" className="tenant-popover-projects" onClick={() => { setOpen(false); onViewAllProjects(); }}>
+              <FolderKanban size={13} /> All projects
+            </button>
+          ) : null}
           <div className="tenant-popover-section">
             <label>Enterprise</label>
             <select value={registry.currentEnterprise?.id ?? ""} onChange={(event) => registry.selectEnterprise(event.target.value)}>
@@ -79,12 +89,14 @@ function TenantSelector() {
 export function TopNavigation({ activePage, roleMode, onNavigate, onRoleModeChange }: TopNavigationProps) {
   const registry = useRegistry();
   const { branding } = registry;
+  const { capabilities } = usePersona();
+  const home: WorkspacePage = capabilities.canSeeAllProjects ? "projects" : "sites";
   return (
     <header className="top-navigation">
       <button
         className={`brand${branding.logoUrl ? " has-logo" : ""}`}
         type="button"
-        onClick={() => onNavigate("sites")}
+        onClick={() => onNavigate(home)}
         aria-label={`${branding.brandName} home`}
       >
         <span className="brand-mark">
@@ -101,7 +113,7 @@ export function TopNavigation({ activePage, roleMode, onNavigate, onRoleModeChan
       </button>
 
       <div className="top-navigation-main">
-        <TenantSelector />
+        <TenantSelector onViewAllProjects={capabilities.canSeeAllProjects ? () => onNavigate("projects") : undefined} />
 
         <nav className="primary-nav" aria-label="Primary navigation">
           {topItems.filter((item) => registry.isPageAvailable(item.page)).map((item) => (
