@@ -73,10 +73,39 @@ touches the locked Site Inventory, hero, top-nav, or sidebar.
   `reconciliationState: "pending-reconciliation"`. Canonical authorizations and
   risks are untouched.
 
+## Consultant reconciliation (the operator half)
+
+A decision only reaches canonical state when the **consultant reconciles** it —
+the operator counterpart of the customer's "Actions required" panel.
+
+- **Queue** — `buildReconciliationQueue` (`src/domain/governance.ts`) lists the
+  current engagement's decisions still in `pending-reconciliation`, each resolved
+  to a readable title and its **canonical effect**.
+- **Effect** — `resolveDecisionEffect` is the single source of truth for what a
+  reconcile applies:
+  - `loa-signature` + `approved` → authorization status → **active** (stamps an
+    effective date if missing).
+  - `risk-acceptance` + `accepted` → site risk status → **accepted** (and the
+    cached open-risk count is recomputed).
+  - any **declined** outcome → `kind: "none"` — acknowledge-only, **no canonical
+    change** (the LOA stays pending, the risk stays open).
+- **Where it appears** — a **"Reconciliation queue"** panel on the Dashboard
+  (`src/features/dashboard/ReconciliationPanel.tsx`), shown only to the consultant
+  (`capabilities.canOperate`) and only when the queue is non-empty. The customer
+  never sees it; the read-only leadership Dashboard is otherwise unchanged.
+- **`reconcileDecision`** (registry context) applies the effect, flips the
+  decision to `reconciled`, and writes an **audit** event
+  (`action: "decision-reconciled"`, `source: "reconciliation"`) recording the
+  before/after canonical status. Once reconciled, the item drops off both the
+  consultant's queue and (for approvals) the customer's pending list; the
+  customer's panel shows "reconciled by consultant".
+
+Accepting a risk **does not improve the technical score** or erase the underlying
+gap (domain rule); reconciliation only changes the risk's state.
+
 ## Boundaries
 
 - No operator tools for customers (still gated by `canOperate`).
-- No edits to canonical sites, LOAs, risks, or scores.
+- Customers never edit canonical sites, LOAs, risks, or scores — only the
+  consultant's reconcile applies a decision to canonical state.
 - No live/operational or legal-compliance semantics.
-- The consultant reconciliation UI (applying decisions to canonical state) is a
-  planned follow-up; today decisions are recorded and surfaced for the operator.

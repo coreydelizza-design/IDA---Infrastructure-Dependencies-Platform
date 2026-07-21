@@ -18,11 +18,12 @@ import type {
   PendingApproval,
   PortfolioSummary,
   ProjectSummary,
+  ReconciliationItem,
   ResolvedBranding,
   Site,
   SiteRecord,
 } from "../domain";
-import { buildDecision, buildPendingApprovals, buildProjectSummaries, EMPTY_BRANDING, isPageAvailable as tierPageAvailable, presentSite, resolveBranding, resolveTier } from "../domain";
+import { buildDecision, buildPendingApprovals, buildProjectSummaries, buildReconciliationQueue, EMPTY_BRANDING, isPageAvailable as tierPageAvailable, presentSite, resolveBranding, resolveDecisionEffect, resolveTier } from "../domain";
 
 /** Fixed portfolio summary for the full estate (preserves the approved KPI strip). */
 export const canonicalPortfolioSummary: PortfolioSummary = {
@@ -72,6 +73,12 @@ interface RegistryContextValue {
   /** Record a customer governed decision (approval/input). Never edits canonical
    *  facts — writes a CustomerDecision for consultant reconciliation. */
   submitCustomerDecision: (input: { item: PendingApproval; outcome: DecisionOutcome; note: string; actorRole: CustomerRole }) => void;
+  /** Consultant view: customer decisions awaiting reconciliation for the current
+   *  engagement, resolved to their canonical effect. */
+  reconciliationQueue: ReconciliationItem[];
+  /** Reconcile a decision: apply its canonical effect (LOA → active, risk →
+   *  accepted; declines make no change), mark it reconciled, and write audit. */
+  reconcileDecision: (decisionId: string) => void;
   portfolioSummary: PortfolioSummary;
   selectEnterprise: (enterpriseId: string) => void;
   selectEngagement: (engagementId: string) => void;
@@ -297,6 +304,72 @@ export function RegistryProvider({ children }: { children: ReactNode }) {
     [store, currentEngagement, refresh],
   );
 
+  const reconciliationQueue = useMemo<ReconciliationItem[]>(
+    () =>
+      currentEngagement
+        ? buildReconciliationQueue({
+            engagementId: currentEngagement.id,
+            decisions: customerDecisions,
+            authorizations: engagementAuthorizations,
+            siteRecords,
+          })
+        : [],
+    [currentEngagement, customerDecisions, engagementAuthorizations, siteRecords],
+  );
+
+  const reconcileDecision = useCallback(
+    (decisionId: string) => {
+      const engagementId = currentEngagement?.id;
+      if (!engagementId) return;
+      const timestamp = new Date().toISOString();
+      store.write((data) => {
+        const decision = data.customerDecisions.find((d) => d.id === decisionId);
+        if (!decision || decision.reconciliationState === "reconciled") return;
+        const effect = resolveDecisionEffect(decision);
+        let before: string | null = null;
+        let after: string | null = effect.summary;
+
+        if (effect.kind === "authorization") {
+          const auth = data.authorizations.find((a) => a.id === effect.targetId);
+          if (auth && effect.nextStatus) {
+            before = `authorization ${auth.id}: ${auth.status}`;
+            auth.status = effect.nextStatus as typeof auth.status;
+            auth.effectiveDate = auth.effectiveDate ?? timestamp.slice(0, 10);
+            after = `authorization ${auth.id}: ${auth.status}`;
+          }
+        } else if (effect.kind === "risk" && effect.siteId) {
+          const site = data.sites.find((s) => s.id === effect.siteId);
+          const risk = site?.risks.find((r) => r.id === effect.targetId);
+          if (site && risk && effect.nextStatus) {
+            before = `risk ${risk.id}: ${risk.status}`;
+            risk.status = effect.nextStatus as typeof risk.status;
+            after = `risk ${risk.id}: ${risk.status}`;
+            // Keep the cached open-risk count consistent with the mutated status.
+            // (Accepting a risk does not change the technical score by design.)
+            site.cardOpenRiskCount = site.risks.filter((r) => r.status === "open").length;
+          }
+        }
+
+        decision.reconciliationState = "reconciled";
+        data.audit.push({
+          id: `audit-recon-${decision.id}-${timestamp}`,
+          engagementId,
+          actorUserId: "user-engagement-lead",
+          actorRole: "engagement-lead",
+          entityType: "customer-decision",
+          entityId: decision.id,
+          action: "decision-reconciled",
+          timestamp,
+          beforeSummary: before,
+          afterSummary: after,
+          source: "reconciliation",
+        });
+      });
+      refresh();
+    },
+    [store, currentEngagement, refresh],
+  );
+
   const resetDemoData = useCallback(() => {
     store.resetDemoData();
     store.initialize(buildSeedDataset);
@@ -328,6 +401,8 @@ export function RegistryProvider({ children }: { children: ReactNode }) {
     contracts: dataset.contracts.filter((c) => c.enterpriseClientId === currentEnterprise?.id),
     pendingApprovals,
     submitCustomerDecision,
+    reconciliationQueue,
+    reconcileDecision,
     portfolioSummary: canonicalPortfolioSummary,
     selectEnterprise,
     selectEngagement,

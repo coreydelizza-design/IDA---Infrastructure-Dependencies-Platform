@@ -3183,6 +3183,25 @@ select {
 .dashboard-action-decline:hover { border-color: var(--red-500); color: var(--ink-100); }
 .dashboard-actions-foot { margin: 12px 0 0; color: var(--ink-500); font-size: 8.4px; line-height: 1.5; }
 
+/* Consultant reconciliation queue (operator counterpart of Actions required) */
+.dashboard-reconcile { margin-top: 12px; }
+.dashboard-reconcile .dashboard-panel-head h2 { display: inline-flex; align-items: center; gap: 6px; }
+.dashboard-reconcile .dashboard-panel-head h2 svg { color: var(--green-500); }
+.dashboard-reconcile-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: var(--navy-850);
+}
+.dashboard-reconcile-decision { margin-top: 3px; color: var(--ink-300); font-size: 8.8px; }
+.dashboard-reconcile-decision em { color: var(--ink-400); font-style: italic; }
+.dashboard-reconcile-effect { display: inline-flex; align-items: center; gap: 5px; margin-top: 3px; color: var(--green-500); font-size: 8.8px; }
+.dashboard-reconcile-effect.is-none { color: var(--ink-500); }
+
 /* Enterprise-role sub-toggle in Administration (View as → customer) */
 .tier-subrole { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-subtle); }
 .tier-subrole p { margin: 0 0 8px; color: var(--ink-400); font-size: 9px; line-height: 1.5; }

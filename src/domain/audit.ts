@@ -17,7 +17,8 @@ export type AuditAction =
   | "data-gap-created"
   | "data-gap-resolved"
   | "registry-state-changed"
-  | "assessment-status-changed";
+  | "assessment-status-changed"
+  | "decision-reconciled";
 
 export interface AuditEvent {
   id: string;
