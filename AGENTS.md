@@ -91,6 +91,7 @@ in time. It never represents live operational network condition.
 - **Lite mode** (see `docs/LITE_MODE.md`) is a per-enterprise delivery tier that hides advanced workspaces over the same locked shell. It is a route/nav gate only — never a domain fork, scoring change, or edit to the locked hero. Tier defaults to `full`, so the baseline render is unchanged; the Administration route is never gated.
 - **Colors are token-driven** (see `docs/THEME_TOKENS.md`). `app.css` contains no hardcoded color literals — always add or reuse a `--token` in `tokens.css`, never a raw hex/rgba. The **dark token values are the locked baseline**; changing a dark value is a baseline change requiring product-owner approval.
 - **Light theme** is an opt-in `:root[data-theme="light"]` override layer (Administration → Appearance; persisted per viewer). Dark is the default and stays byte-identical. Photographic site cards remain a dark media tile in light mode by design. Light values may be tuned for contrast/aesthetics without approval; keep status text legible (≥ 3:1) on the light surface.
+- **Site Inventory interactions** (see `docs/SITE_INVENTORY_INTERACTIONS.md`): a hover/focus **risk peek** (transient portal popover on the open-risks chip) and an opt-in **overlay inspector layout** (Administration → Site inventory layout; default `docked`). Both are additive — the default docked, no-hover render is pixel-identical to the locked baseline. Do not add new controls to the locked hero; keep such toggles in Administration.
 
 ## Domain rules
 

@@ -1,6 +1,7 @@
-import { Moon, Palette, RotateCcw, Shield, Sun, Upload, X } from "lucide-react";
+import { Maximize2, Moon, Palette, PanelRight, RotateCcw, Shield, Sun, Upload, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { useRegistry } from "../../application/registryContext";
+import { useInspectorLayout, type InspectorLayout } from "../../application/inspectorLayout";
 import { useTheme, type Theme } from "../../application/theme";
 import {
   MAX_LOGO_DATA_URL_LENGTH,
@@ -17,6 +18,10 @@ const THEMES: Array<{ value: Theme; label: string; hint: string }> = [
   { value: "dark", label: "Dark", hint: "Default" },
   { value: "light", label: "Light", hint: "Neutral light" },
 ];
+const LAYOUTS: Array<{ value: InspectorLayout; label: string; hint: string }> = [
+  { value: "docked", label: "Docked", hint: "Inspector beside grid" },
+  { value: "overlay", label: "Overlay", hint: "Grid stays full width" },
+];
 
 const MAX_KB = Math.round(MAX_LOGO_DATA_URL_LENGTH / 1024);
 
@@ -24,6 +29,7 @@ export function BrandingSettingsPage() {
   const registry = useRegistry();
   const { branding, brandingConfig, currentEnterprise, updateBranding, resetBranding, tier, setTier } = registry;
   const { theme, setTheme } = useTheme();
+  const { layout, setLayout } = useInspectorLayout();
   const fileRef = useRef<HTMLInputElement>(null);
   const [logoInput, setLogoInput] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -127,6 +133,29 @@ export function BrandingSettingsPage() {
               {t.value === "dark" ? <Moon size={14} /> : <Sun size={14} />}
               <strong>{t.label}</strong>
               <small>{t.hint}</small>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="tier-panel">
+        <div className="tier-panel-head">
+          <span className="eyebrow">Site inventory layout</span>
+          <p>How the detail inspector opens. Docked places it beside the card grid (the grid reflows to three columns). Overlay keeps the grid full width and floats the inspector over the right edge, so opening a site never compresses the cards. Per-viewer preference.</p>
+        </div>
+        <div className="tier-toggle" role="radiogroup" aria-label="Inspector layout">
+          {LAYOUTS.map((l) => (
+            <button
+              key={l.value}
+              type="button"
+              role="radio"
+              aria-checked={layout === l.value}
+              className={layout === l.value ? "active" : ""}
+              onClick={() => setLayout(l.value)}
+            >
+              {l.value === "docked" ? <PanelRight size={14} /> : <Maximize2 size={14} />}
+              <strong>{l.label}</strong>
+              <small>{l.hint}</small>
             </button>
           ))}
         </div>

@@ -11,6 +11,7 @@ import {
   Users,
 } from "lucide-react";
 import type { Site } from "../domain/models";
+import { RiskPeek } from "./RiskPeek";
 import { ScoreRing } from "./ScoreRing";
 import { StatusBadge } from "./StatusBadge";
 
@@ -105,10 +106,11 @@ export function SiteCard({ site, selected, compact = false, listMode = false, on
 
         <div className="site-card-footer">
           <span>{carrierLabel}</span>
-          <span className={displayRiskCount > 0 ? "risk-text" : "no-risk-text"}>
-            {displayRiskCount > 0 ? `${displayRiskCount} Open risk${displayRiskCount === 1 ? "" : "s"}` : "No open risks"}
-            <span aria-hidden="true">›</span>
-          </span>
+          {displayRiskCount > 0 ? (
+            <RiskPeek count={displayRiskCount} risks={site.risks} siteLabel={`${site.code} – ${site.name}`} />
+          ) : (
+            <span className="no-risk-text">No open risks<span aria-hidden="true">›</span></span>
+          )}
         </div>
       </div>
     </article>
