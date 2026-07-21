@@ -65,6 +65,10 @@ function registryStateForBadge(badge: EvidenceBadge, confidence: EvidenceConfide
 
 interface SiteSpec {
   id: string;
+  /** Owning engagement; defaults to the canonical ENG-2026-001 when omitted. */
+  engagementId?: string;
+  /** Owning enterprise; defaults to the canonical Enterprise Co. when omitted. */
+  enterpriseClientId?: string;
   code: string;
   name: string;
   archetype: string;
@@ -105,11 +109,14 @@ function buildSite(spec: SiteSpec): SiteRecord {
   const total = spec.carriers.length;
   const documented = verified + providerClaimed;
   const openRisks = spec.risks.filter((r) => r.status === "open").length;
+  const enterpriseClientId = spec.enterpriseClientId ?? ENTERPRISE_ID;
+  const engagementId = spec.engagementId ?? ENGAGEMENT_ID;
+  const isCanonical = enterpriseClientId === ENTERPRISE_ID;
   return {
     id: spec.id,
     tenantId: TENANT_ID,
-    enterpriseClientId: ENTERPRISE_ID,
-    engagementId: ENGAGEMENT_ID,
+    enterpriseClientId,
+    engagementId,
     code: spec.code,
     name: spec.name,
     archetypeId: spec.archetype,
@@ -141,7 +148,8 @@ function buildSite(spec: SiteSpec): SiteRecord {
     lastVerifiedAt: spec.assessedAt,
     nextReviewAt: spec.nextReviewAt,
     consultantOwnerId: "user-consultant-1",
-    enterpriseOwnerContactId: "con-1",
+    // Demo-portfolio sites have no seeded enterprise contacts; avoid a dangling ref.
+    enterpriseOwnerContactId: isCanonical ? "con-1" : null,
     pendingEnterpriseRequestCount: openRisks > 0 ? 1 : 0,
     pendingCarrierRequestCount: providerClaimed + (total - documented),
     unresolvedDependencyCount: spec.carriers.filter((c) => c.routeVerification !== "verified").length,
@@ -355,7 +363,8 @@ function providersFromSites(sites: SiteRecord[]): Provider[] {
 // Additional demo enterprises + engagements so the consultant's Project
 // Inventory shows a realistic portfolio at different lifecycle stages. The
 // canonical Enterprise Co. / ENG-2026-001 project (with the seeded sites and the
-// locked branding) remains the primary; these carry no sites yet.
+// locked branding) remains the primary; each demo engagement carries its own
+// representative sites (see demoSiteSpecs) so every project opens populated.
 export const DEMO_ENTERPRISES: EnterpriseClient[] = [
   { id: "ent-northwind", consultancyOrganizationId: ORG_ID, name: "Northwind Trading", legalName: "Northwind Trading Group Ltd", industry: "Capital Markets", headquartersCountry: "US", status: "active", externalReference: "CRM-5107", createdAt: NOW, updatedAt: NOW },
   { id: "ent-meridian", consultancyOrganizationId: ORG_ID, name: "Meridian Health", legalName: "Meridian Health Systems Inc", industry: "Healthcare", headquartersCountry: "US", status: "active", externalReference: "CRM-4990", createdAt: NOW, updatedAt: NOW },
@@ -369,6 +378,145 @@ export const DEMO_ENGAGEMENTS: Engagement[] = [
   { id: "eng-2026-040", consultancyOrganizationId: ORG_ID, enterpriseClientId: "ent-atlas", name: "Edge Network Baseline", code: "ENG-2026-040", description: "Baseline dependency registry for distribution-center edge sites.", status: "published", scopeStatement: "58 distribution-center edge sites; connectivity and wireless-failover dependencies.", startDate: "2025-09-15", targetCompletionDate: "2026-04-30", reviewCadence: "annual", leadConsultantUserId: "user-engagement-lead", createdAt: NOW, updatedAt: NOW },
 ];
 
+// Demo-portfolio site specs. A small, representative set of sites for each demo
+// engagement so a consultant clicking between projects always lands on a
+// populated Site Inventory (varied scores, risks, and carrier evidence). The
+// canonical ENG-2026-001 estate is unchanged; these sites live on other
+// engagements and never affect the locked default render.
+const demoSiteSpecs: SiteSpec[] = [
+  // --- ENG-2026-014 · Disaster Recovery Site Review (Enterprise Co., scoping) ---
+  {
+    id: "site-dr1-slough", engagementId: "eng-2026-014", code: "DR1", name: "Slough", archetype: "Recovery Data Center", primaryLocationType: "Tier II / Recovery",
+    criticalityLabel: "Tier II Recovery", city: "Slough", stateProvince: "Berkshire", postalCode: "SL1 4AX", countryCode: "UK", countryName: "United Kingdom", region: "EMEA",
+    address: "Buckingham Avenue\nSlough SL1 4AX", timezone: "GMT (UTC+0)", owner: "Resilience Office", favorite: false, evidenceBadge: "provider-claimed-diverse", image: "/assets/sites/dc2-frankfurt.webp",
+    score: 84, band: "good", label: "Good", assessedAt: "5 days ago", singleSiteApproved: false, technicalGapRetained: false,
+    carriers: [carrier("circuit-dr1-bt", "BT Global Services", "Openreach", "primary", "10G DIA", "BT-DR1-014", "provider-claimed"), carrier("circuit-dr1-colt", "Colt", "Colt", "secondary", "10G EPL", "COLT-DR1-88", "provider-claimed")],
+    dependencyCount: 9, cardOpenRiskCount: 1, risks: [{ id: "RSK-314", title: "Failover runbook evidence outstanding", severity: "medium", status: "open", control: "OPS-BCP-05" }],
+    evidenceConfidence: "medium", evidenceConfidencePercent: 79, nextReviewAt: "in 40 days", tags: ["recovery", "data-center", "dr"],
+  },
+  {
+    id: "site-dr2-reading", engagementId: "eng-2026-014", code: "DR2", name: "Reading", archetype: "Standby Site", primaryLocationType: "Standby",
+    criticalityLabel: "Tier III Standby", city: "Reading", stateProvince: "Berkshire", postalCode: "RG1 8EQ", countryCode: "UK", countryName: "United Kingdom", region: "EMEA",
+    address: "Forbury Road\nReading RG1 8EQ", timezone: "GMT (UTC+0)", owner: "Resilience Office", favorite: false, evidenceBadge: null, image: "/assets/sites/br-1001-paris.webp",
+    score: 61, band: "at-risk", label: "At Risk", assessedAt: "9 days ago", singleSiteApproved: false, technicalGapRetained: true,
+    carriers: [carrier("circuit-dr2-virgin", "Virgin Media O2", "Virgin", "primary", "1G DIA", "VMB-DR2-11", "unknown")],
+    dependencyCount: 5, cardOpenRiskCount: 2, risks: [{ id: "RSK-320", title: "No independent secondary access", severity: "high", status: "open", control: "NET-DIV-01" }, { id: "RSK-322", title: "Standby power test overdue", severity: "medium", status: "open", control: "PWR-BCP-03" }],
+    evidenceConfidence: "low", evidenceConfidencePercent: 58, nextReviewAt: "in 10 days", tags: ["standby", "single-carrier", "dr"],
+  },
+  {
+    id: "site-dr3-manchester", engagementId: "eng-2026-014", code: "DR3", name: "Manchester", archetype: "Regional Office", primaryLocationType: "Regional Office",
+    criticalityLabel: "Tier III Business Critical", city: "Manchester", stateProvince: "Greater Manchester", postalCode: "M1 4WP", countryCode: "UK", countryName: "United Kingdom", region: "EMEA",
+    address: "Piccadilly Place\nManchester M1 4WP", timezone: "GMT (UTC+0)", owner: "North IT", favorite: false, evidenceBadge: "evidence-verified", image: "/assets/sites/ro-singapore.webp",
+    score: 82, band: "good", label: "Good", assessedAt: "6 days ago", singleSiteApproved: false, technicalGapRetained: false,
+    carriers: [carrier("circuit-dr3-bt", "BT Global Services", "Openreach", "primary", "1G DIA", "BT-DR3-02", "verified"), carrier("circuit-dr3-gtt", "GTT", "GTT", "secondary", "1G DIA", "GTT-DR3-17", "verified")],
+    dependencyCount: 8, cardOpenRiskCount: 0, risks: [], evidenceConfidence: "high", evidenceConfidencePercent: 88, nextReviewAt: "in 34 days", tags: ["regional", "recovery", "dr"],
+  },
+
+  // --- ENG-2026-022 · Trading Floor Resilience 2026 (Northwind, assessment) ---
+  {
+    id: "site-tf1-chicago", engagementId: "eng-2026-022", enterpriseClientId: "ent-northwind", code: "TF1", name: "Chicago", archetype: "Financial Trading Floor", primaryLocationType: "Regulated Trading Facility",
+    criticalityLabel: "Tier I Mission Critical", city: "Chicago", stateProvince: "IL", postalCode: "60604", countryCode: "US", countryName: "United States", region: "Americas",
+    address: "141 W Jackson Blvd\nChicago, IL 60604", timezone: "CST (UTC-6)", owner: "Global Markets Technology", favorite: false, evidenceBadge: "evidence-verified", image: "/assets/sites/trd-new-york.webp",
+    score: 93, band: "excellent", label: "Excellent", assessedAt: "2 days ago", singleSiteApproved: false, technicalGapRetained: false,
+    carriers: [carrier("circuit-tf1-lumen", "Lumen", "Lumen", "primary", "10G Wave", "TF1-LUM-01", "verified"), carrier("circuit-tf1-zayo", "Zayo", "Zayo", "secondary", "10G Wave", "TF1-ZAY-02", "verified")],
+    dependencyCount: 16, cardOpenRiskCount: 0, risks: [], evidenceConfidence: "high", evidenceConfidencePercent: 90, nextReviewAt: "in 20 days", tags: ["trading", "regulated", "low-latency"],
+  },
+  {
+    id: "site-tf2-london", engagementId: "eng-2026-022", enterpriseClientId: "ent-northwind", code: "TF2", name: "London (City)", archetype: "Financial Trading Floor", primaryLocationType: "Regulated Trading Facility",
+    criticalityLabel: "Tier I Mission Critical", city: "London", stateProvince: "England", postalCode: "EC2N 1HQ", countryCode: "UK", countryName: "United Kingdom", region: "EMEA",
+    address: "Old Broad Street\nLondon EC2N 1HQ", timezone: "GMT (UTC+0)", owner: "Global Markets Technology", favorite: false, evidenceBadge: "under-carrier-review", image: "/assets/sites/dc1-london.webp",
+    score: 80, band: "good", label: "Good", assessedAt: "4 days ago", singleSiteApproved: false, technicalGapRetained: false,
+    carriers: [carrier("circuit-tf2-colt", "Colt", "Colt", "primary", "10G Wave", "TF2-COLT-01", "provider-claimed"), carrier("circuit-tf2-bt", "BT Global Services", "Openreach", "secondary", "10G DIA", "TF2-BT-02", "provider-claimed")],
+    dependencyCount: 13, cardOpenRiskCount: 1, risks: [{ id: "RSK-410", title: "Latency-path diversity unverified", severity: "medium", status: "open", control: "NET-DIV-03" }],
+    evidenceConfidence: "medium", evidenceConfidencePercent: 77, nextReviewAt: "in 18 days", tags: ["trading", "regulated", "carrier-review"],
+  },
+  {
+    id: "site-exc1-secaucus", engagementId: "eng-2026-022", enterpriseClientId: "ent-northwind", code: "EXC1", name: "Secaucus (NY4)", archetype: "Exchange Access Point", primaryLocationType: "Colocation / Exchange Access",
+    criticalityLabel: "Tier I Mission Critical", city: "Secaucus", stateProvince: "NJ", postalCode: "07094", countryCode: "US", countryName: "United States", region: "Americas",
+    address: "755 Secaucus Road\nSecaucus, NJ 07094", timezone: "EST (UTC-5)", owner: "Global Markets Technology", favorite: false, evidenceBadge: "evidence-verified", image: "/assets/sites/aws-eu-west-1.webp",
+    score: 91, band: "excellent", label: "Excellent", assessedAt: "3 days ago", singleSiteApproved: false, technicalGapRetained: false,
+    carriers: [carrier("circuit-exc1-eqx", "Equinix Fabric", "Equinix", "primary", "10G Cross-Connect", "EXC1-EQX-01", "verified"), carrier("circuit-exc1-verizon", "Verizon", "Verizon", "secondary", "10G Wave", "EXC1-VZ-02", "verified")],
+    dependencyCount: 12, cardOpenRiskCount: 0, risks: [], evidenceConfidence: "high", evidenceConfidencePercent: 92, nextReviewAt: "in 24 days", tags: ["exchange", "colocation", "low-latency"],
+  },
+  {
+    id: "site-tf3-tokyo", engagementId: "eng-2026-022", enterpriseClientId: "ent-northwind", code: "TF3", name: "Tokyo", archetype: "Financial Trading Floor", primaryLocationType: "Regulated Trading Facility",
+    criticalityLabel: "Tier II Critical", city: "Tokyo", stateProvince: "—", postalCode: "100-0005", countryCode: "JP", countryName: "Japan", region: "APAC",
+    address: "Marunouchi\nChiyoda, Tokyo 100-0005", timezone: "JST (UTC+9)", owner: "APAC Markets Technology", favorite: false, evidenceBadge: null, image: "/assets/sites/hub-amsterdam.webp",
+    score: 66, band: "at-risk", label: "At Risk", assessedAt: "8 days ago", singleSiteApproved: false, technicalGapRetained: true,
+    carriers: [carrier("circuit-tf3-ntt", "NTT", "NTT", "primary", "10G Wave", "TF3-NTT-01", "unknown")],
+    dependencyCount: 10, cardOpenRiskCount: 1, risks: [{ id: "RSK-420", title: "Single exchange access path", severity: "high", status: "open", control: "NET-DIV-01" }],
+    evidenceConfidence: "low", evidenceConfidencePercent: 62, nextReviewAt: "in 12 days", tags: ["trading", "regulated", "single-carrier"],
+  },
+
+  // --- ENG-2026-031 · Data Center Consolidation Assurance (Meridian, periodic-review) ---
+  {
+    id: "site-core1-dallas", engagementId: "eng-2026-031", enterpriseClientId: "ent-meridian", code: "CORE1", name: "Dallas", archetype: "Primary Data Center", primaryLocationType: "Tier I / Mission Critical",
+    criticalityLabel: "Tier I Mission Critical", city: "Dallas", stateProvince: "TX", postalCode: "75207", countryCode: "US", countryName: "United States", region: "Americas",
+    address: "Stemmons Freeway\nDallas, TX 75207", timezone: "CST (UTC-6)", owner: "Clinical Infrastructure", favorite: false, evidenceBadge: "evidence-verified", image: "/assets/sites/dc1-london.webp",
+    score: 94, band: "excellent", label: "Excellent", assessedAt: "3 days ago", singleSiteApproved: false, technicalGapRetained: false,
+    carriers: [carrier("circuit-core1-att", "AT&T", "AT&T", "primary", "10G DIA", "CORE1-ATT-01", "verified"), carrier("circuit-core1-lumen", "Lumen", "Lumen", "secondary", "10G DIA", "CORE1-LUM-02", "verified")],
+    dependencyCount: 17, cardOpenRiskCount: 0, risks: [], evidenceConfidence: "high", evidenceConfidencePercent: 91, nextReviewAt: "in 26 days", tags: ["primary", "data-center", "clinical"],
+  },
+  {
+    id: "site-core2-atlanta", engagementId: "eng-2026-031", enterpriseClientId: "ent-meridian", code: "CORE2", name: "Atlanta", archetype: "Secondary Data Center", primaryLocationType: "Tier II / Critical",
+    criticalityLabel: "Tier II Critical", city: "Atlanta", stateProvince: "GA", postalCode: "30328", countryCode: "US", countryName: "United States", region: "Americas",
+    address: "Northside Parkway\nAtlanta, GA 30328", timezone: "EST (UTC-5)", owner: "Clinical Infrastructure", favorite: false, evidenceBadge: "provider-claimed-diverse", image: "/assets/sites/dc2-frankfurt.webp",
+    score: 83, band: "good", label: "Good", assessedAt: "5 days ago", singleSiteApproved: false, technicalGapRetained: false,
+    carriers: [carrier("circuit-core2-comcast", "Comcast Business", "Comcast", "primary", "10G EPL", "CORE2-CMB-01", "provider-claimed"), carrier("circuit-core2-cox", "Cox", "Cox", "secondary", "10G DIA", "CORE2-COX-02", "provider-claimed")],
+    dependencyCount: 12, cardOpenRiskCount: 0, risks: [], evidenceConfidence: "medium", evidenceConfidencePercent: 80, nextReviewAt: "in 29 days", tags: ["secondary", "data-center", "clinical"],
+  },
+  {
+    id: "site-clin1-houston", engagementId: "eng-2026-031", enterpriseClientId: "ent-meridian", code: "CLIN1", name: "Houston Clinical Hub", archetype: "Clinical Facility", primaryLocationType: "Clinical Hub",
+    criticalityLabel: "Tier II Critical", city: "Houston", stateProvince: "TX", postalCode: "77030", countryCode: "US", countryName: "United States", region: "Americas",
+    address: "Fannin Street\nHouston, TX 77030", timezone: "CST (UTC-6)", owner: "Clinical Operations", favorite: false, evidenceBadge: null, image: "/assets/sites/br-1001-paris.webp",
+    score: 64, band: "at-risk", label: "At Risk", assessedAt: "10 days ago", singleSiteApproved: false, technicalGapRetained: true,
+    carriers: [carrier("circuit-clin1-att", "AT&T", "AT&T", "primary", "1G DIA", "CLIN1-ATT-01", "unknown")],
+    dependencyCount: 6, cardOpenRiskCount: 2, risks: [{ id: "RSK-430", title: "Clinical system single path", severity: "high", status: "open", control: "NET-DIV-01" }, { id: "RSK-433", title: "Generator load test overdue", severity: "medium", status: "open", control: "PWR-BCP-03" }],
+    evidenceConfidence: "low", evidenceConfidencePercent: 60, nextReviewAt: "in 9 days", tags: ["clinical", "single-carrier", "at-risk"],
+  },
+
+  // --- ENG-2026-040 · Edge Network Baseline (Atlas, published) ---
+  {
+    id: "site-edge-a-rotterdam", engagementId: "eng-2026-040", enterpriseClientId: "ent-atlas", code: "EDGE-A", name: "Rotterdam DC", archetype: "Edge Site", primaryLocationType: "Distribution-Center Edge",
+    criticalityLabel: "Tier III Business Critical", city: "Rotterdam", stateProvince: "South Holland", postalCode: "3011", countryCode: "NL", countryName: "Netherlands", region: "EMEA",
+    address: "Waalhaven\nRotterdam 3011", timezone: "CET (UTC+1)", owner: "Edge Operations", favorite: false, evidenceBadge: "evidence-verified", image: "/assets/sites/edge-25-madrid.webp",
+    score: 81, band: "good", label: "Good", assessedAt: "6 days ago", singleSiteApproved: false, technicalGapRetained: false,
+    carriers: [carrier("circuit-edgea-kpn", "KPN", "KPN", "primary", "1G DIA", "EDGEA-KPN-01", "verified"), carrier("circuit-edgea-lte", "Vodafone", "Vodafone", "secondary", "LTE Failover", "EDGEA-VF-02", "verified")],
+    dependencyCount: 5, cardOpenRiskCount: 0, risks: [], evidenceConfidence: "high", evidenceConfidencePercent: 87, nextReviewAt: "in 44 days", tags: ["edge", "distribution", "wireless-failover"],
+  },
+  {
+    id: "site-edge-b-hamburg", engagementId: "eng-2026-040", enterpriseClientId: "ent-atlas", code: "EDGE-B", name: "Hamburg DC", archetype: "Edge Site", primaryLocationType: "Distribution-Center Edge",
+    criticalityLabel: "Tier III Business Critical", city: "Hamburg", stateProvince: "Hamburg", postalCode: "20457", countryCode: "DE", countryName: "Germany", region: "EMEA",
+    address: "Am Sandtorkai\nHamburg 20457", timezone: "CET (UTC+1)", owner: "Edge Operations", favorite: false, evidenceBadge: "single-site-acceptable", image: "/assets/sites/hub-amsterdam.webp",
+    score: 88, band: "excellent", label: "Excellent", assessedAt: "4 days ago", singleSiteApproved: true, technicalGapRetained: false,
+    carriers: [carrier("circuit-edgeb-telekom", "Deutsche Telekom", "Telekom", "primary", "1G DIA", "EDGEB-DT-01", "verified")],
+    dependencyCount: 4, cardOpenRiskCount: 0, risks: [], evidenceConfidence: "high", evidenceConfidencePercent: 86, nextReviewAt: "in 41 days", tags: ["edge", "distribution", "single-site-approved"],
+  },
+  {
+    id: "site-edge-c-lyon", engagementId: "eng-2026-040", enterpriseClientId: "ent-atlas", code: "EDGE-C", name: "Lyon DC", archetype: "Edge Site", primaryLocationType: "Distribution-Center Edge",
+    criticalityLabel: "Tier III Business Critical", city: "Lyon", stateProvince: "Auvergne-Rhône-Alpes", postalCode: "69007", countryCode: "FR", countryName: "France", region: "EMEA",
+    address: "Rue de Gerland\nLyon 69007", timezone: "CET (UTC+1)", owner: "Edge Operations", favorite: false, evidenceBadge: "provider-claimed-diverse", image: "/assets/sites/ro-singapore.webp",
+    score: 79, band: "good", label: "Good", assessedAt: "7 days ago", singleSiteApproved: false, technicalGapRetained: false,
+    carriers: [carrier("circuit-edgec-orange", "Orange Business", "Orange", "primary", "1G DIA", "EDGEC-OBS-01", "provider-claimed"), carrier("circuit-edgec-lte", "Bouygues", "Bouygues", "secondary", "LTE Failover", "EDGEC-BYG-02", "provider-claimed")],
+    dependencyCount: 5, cardOpenRiskCount: 1, risks: [{ id: "RSK-440", title: "Wireless-failover test evidence outstanding", severity: "medium", status: "open", control: "OPS-BCP-05" }],
+    evidenceConfidence: "medium", evidenceConfidencePercent: 78, nextReviewAt: "in 38 days", tags: ["edge", "distribution", "wireless-failover"],
+  },
+  {
+    id: "site-edge-d-milan", engagementId: "eng-2026-040", enterpriseClientId: "ent-atlas", code: "EDGE-D", name: "Milan DC", archetype: "Edge Site", primaryLocationType: "Distribution-Center Edge",
+    criticalityLabel: "Tier III Business Critical", city: "Milan", stateProvince: "Lombardy", postalCode: "20138", countryCode: "IT", countryName: "Italy", region: "EMEA",
+    address: "Via Mecenate\nMilan 20138", timezone: "CET (UTC+1)", owner: "Edge Operations", favorite: false, evidenceBadge: null, image: "/assets/sites/aws-eu-west-1.webp",
+    score: 63, band: "at-risk", label: "At Risk", assessedAt: "11 days ago", singleSiteApproved: false, technicalGapRetained: true,
+    carriers: [carrier("circuit-edged-tim", "TIM", "TIM", "primary", "1G DIA", "EDGED-TIM-01", "unknown")],
+    dependencyCount: 4, cardOpenRiskCount: 1, risks: [{ id: "RSK-450", title: "No wireless failover configured", severity: "high", status: "open", control: "NET-DIV-04" }],
+    evidenceConfidence: "low", evidenceConfidencePercent: 57, nextReviewAt: "in 8 days", tags: ["edge", "distribution", "single-carrier"],
+  },
+];
+
+/** Built demo-portfolio site records + their assessment artifacts, exported for
+ *  the fresh-install seed and the v6 migration (injected by id if absent). */
+export const DEMO_SITES: SiteRecord[] = demoSiteSpecs.map(buildSite);
+export const DEMO_SITE_ARTIFACTS = assessmentArtifacts(DEMO_SITES);
+
 // Contract repository seed — MSAs and related instruments per enterprise client.
 export const DEMO_CONTRACTS: Contract[] = [
   { id: "ct-msa-enterprise-co", enterpriseClientId: ENTERPRISE_ID, engagementId: null, type: "msa", title: "Master Service Agreement", reference: "MSA-2025-0042", status: "active", counterparty: "Enterprise Co. PLC", effectiveDate: "2025-06-01", expirationDate: "2027-05-31", documentName: "MSA_EnterpriseCo_2025.pdf", notes: "Governs all assurance engagements.", createdAt: NOW, updatedAt: NOW },
@@ -381,7 +529,8 @@ export const DEMO_CONTRACTS: Contract[] = [
 ];
 
 export function buildSeedDataset(): RegistryDataset {
-  const sites = siteSpecs.map(buildSite);
+  const canonicalSites = siteSpecs.map(buildSite);
+  const sites = [...canonicalSites, ...DEMO_SITES];
   const { controlResults, snapshots } = assessmentArtifacts(sites);
   return {
     organizations: [
@@ -410,7 +559,7 @@ export function buildSeedDataset(): RegistryDataset {
     ],
     sites,
     criticalServices: [],
-    providers: providersFromSites(sites),
+    providers: providersFromSites(canonicalSites),
     circuits: [],
     components: [],
     cloudResources: [],

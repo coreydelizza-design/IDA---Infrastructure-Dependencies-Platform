@@ -1,4 +1,4 @@
-import { DEMO_CONTRACTS, DEMO_ENGAGEMENTS, DEMO_ENTERPRISES } from "./seed";
+import { DEMO_CONTRACTS, DEMO_ENGAGEMENTS, DEMO_ENTERPRISES, DEMO_SITES, DEMO_SITE_ARTIFACTS } from "./seed";
 import type {
   AssuranceSnapshot,
   AuditEvent,
@@ -81,7 +81,7 @@ export function resolveStorage(): StorageLike {
   return createMemoryStorage();
 }
 
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 const STORAGE_KEY = "ida.registry.v1";
 
 // v2 backfill: the canonical seeded enterprise carries explicit branding that
@@ -131,6 +131,23 @@ function migrate(envelope: PersistedEnvelope): PersistedEnvelope {
     // seeded. Canonical authorizations/risks are untouched.
     if (!Array.isArray(current.data.customerDecisions)) current.data.customerDecisions = [];
     current.schemaVersion = 5;
+  }
+  if (current.schemaVersion < 6) {
+    // v6: demo-portfolio sites. Inject representative sites (+ their assessment
+    // artifacts) for the demo engagements so every project in the Project
+    // Inventory opens to a populated Site Inventory. Injected by id only if
+    // absent — user-created sites and the canonical ENG-2026-001 estate are
+    // untouched, so the locked default render is unchanged.
+    const siteIds = new Set((current.data.sites ?? []).map((s) => s.id));
+    for (const s of DEMO_SITES) if (!siteIds.has(s.id)) current.data.sites.push({ ...s });
+    if (!Array.isArray(current.data.controlResults)) current.data.controlResults = [];
+    const crKey = (c: { siteId: string; controlId: string }) => `${c.siteId}:${c.controlId}`;
+    const crKeys = new Set(current.data.controlResults.map(crKey));
+    for (const c of DEMO_SITE_ARTIFACTS.controlResults) if (!crKeys.has(crKey(c))) current.data.controlResults.push({ ...c });
+    if (!Array.isArray(current.data.assuranceSnapshots)) current.data.assuranceSnapshots = [];
+    const snapIds = new Set(current.data.assuranceSnapshots.map((s) => s.id));
+    for (const s of DEMO_SITE_ARTIFACTS.snapshots) if (!snapIds.has(s.id)) current.data.assuranceSnapshots.push({ ...s });
+    current.schemaVersion = 6;
   }
   return current;
 }

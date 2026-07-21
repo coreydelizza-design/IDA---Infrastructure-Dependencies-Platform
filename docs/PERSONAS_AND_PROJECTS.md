@@ -43,6 +43,14 @@ and the scope statement. Clicking a project selects its enterprise + engagement
   registry) + an engagement-lifecycle `progress` metric.
 - `registryContext` exposes `projects` and `selectProject`.
 
+**Demo portfolio has populated sites.** Every demo engagement carries its own
+representative sites (`demoSiteSpecs` / `DEMO_SITES` in `seed.ts`; injected into
+existing installs by the schema **v6** migration) so a consultant clicking between
+projects always lands on a populated Site Inventory — varied scores, risks, and
+carrier evidence. The canonical `ENG-2026-001` estate (the eight locked cards) is
+unchanged; demo sites live only on the other engagements, so the default render
+stays byte-identical to the visual baseline.
+
 ## Navigation & landing
 
 - Consultants **land on the Project Inventory**; customers land in the registry
