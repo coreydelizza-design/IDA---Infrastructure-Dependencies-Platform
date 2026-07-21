@@ -2,7 +2,7 @@ import { Maximize2, Moon, Palette, PanelRight, RotateCcw, Shield, Sun, Upload, X
 import { useRef, useState } from "react";
 import { useRegistry } from "../../application/registryContext";
 import { useInspectorLayout, type InspectorLayout } from "../../application/inspectorLayout";
-import { usePersona, PERSONA_LABELS, type Persona } from "../../application/persona";
+import { usePersona, CUSTOMER_ROLE_LABELS, PERSONA_LABELS, type CustomerRole, type Persona } from "../../application/persona";
 import { useTheme, type Theme } from "../../application/theme";
 import {
   MAX_LOGO_DATA_URL_LENGTH,
@@ -27,6 +27,12 @@ const PERSONAS: Array<{ value: Persona; hint: string }> = [
   { value: "consultant", hint: "Operate all projects" },
   { value: "customer", hint: "Read + reporting" },
 ];
+const CUSTOMER_ROLES: Array<{ value: CustomerRole; hint: string }> = [
+  { value: "enterprise-sponsor", hint: "Sign & accept" },
+  { value: "enterprise-approver", hint: "Sign & accept" },
+  { value: "enterprise-contributor", hint: "Respond to gaps" },
+  { value: "read-only-reviewer", hint: "View only" },
+];
 
 const MAX_KB = Math.round(MAX_LOGO_DATA_URL_LENGTH / 1024);
 
@@ -35,7 +41,7 @@ export function BrandingSettingsPage() {
   const { branding, brandingConfig, currentEnterprise, updateBranding, resetBranding, tier, setTier } = registry;
   const { theme, setTheme } = useTheme();
   const { layout, setLayout } = useInspectorLayout();
-  const { persona, setPersona } = usePersona();
+  const { persona, setPersona, customerRole, setCustomerRole } = usePersona();
   const fileRef = useRef<HTMLInputElement>(null);
   const [logoInput, setLogoInput] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -118,6 +124,26 @@ export function BrandingSettingsPage() {
             </button>
           ))}
         </div>
+        {persona === "customer" ? (
+          <div className="tier-subrole">
+            <p>Enterprise role — governs which actions are available. Sponsors and Approvers can sign LOAs and accept risk; Contributors respond to data-gap requests; Reviewers are view-only.</p>
+            <div className="tier-toggle tier-toggle-compact" role="radiogroup" aria-label="Enterprise role">
+              {CUSTOMER_ROLES.map((r) => (
+                <button
+                  key={r.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={customerRole === r.value}
+                  className={customerRole === r.value ? "active" : ""}
+                  onClick={() => setCustomerRole(r.value)}
+                >
+                  <strong>{CUSTOMER_ROLE_LABELS[r.value]}</strong>
+                  <small>{r.hint}</small>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="tier-panel">

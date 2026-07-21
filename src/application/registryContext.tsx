@@ -9,17 +9,20 @@ import type {
   CarrierAcknowledgmentSummary,
   ConsultancyOrganization,
   Contract,
+  CustomerRole,
+  DecisionOutcome,
   DeliveryTier,
   Engagement,
   EnterpriseAuthorizationSummary,
   EnterpriseClient,
+  PendingApproval,
   PortfolioSummary,
   ProjectSummary,
   ResolvedBranding,
   Site,
   SiteRecord,
 } from "../domain";
-import { buildProjectSummaries, EMPTY_BRANDING, isPageAvailable as tierPageAvailable, presentSite, resolveBranding, resolveTier } from "../domain";
+import { buildDecision, buildPendingApprovals, buildProjectSummaries, EMPTY_BRANDING, isPageAvailable as tierPageAvailable, presentSite, resolveBranding, resolveTier } from "../domain";
 
 /** Fixed portfolio summary for the full estate (preserves the approved KPI strip). */
 export const canonicalPortfolioSummary: PortfolioSummary = {
@@ -63,6 +66,12 @@ interface RegistryContextValue {
   acknowledgments: CarrierAcknowledgmentSummary[];
   /** Contract repository (MSAs etc.) for the current enterprise. */
   contracts: Contract[];
+  /** Governed-action queue for the current engagement (LOAs to sign, risks to
+   *  accept/decline) with any decision the customer has already recorded. */
+  pendingApprovals: PendingApproval[];
+  /** Record a customer governed decision (approval/input). Never edits canonical
+   *  facts — writes a CustomerDecision for consultant reconciliation. */
+  submitCustomerDecision: (input: { item: PendingApproval; outcome: DecisionOutcome; note: string; actorRole: CustomerRole }) => void;
   portfolioSummary: PortfolioSummary;
   selectEnterprise: (enterpriseId: string) => void;
   selectEngagement: (engagementId: string) => void;
@@ -238,6 +247,56 @@ export function RegistryProvider({ children }: { children: ReactNode }) {
     [dataset],
   );
 
+  const engagementAuthorizations = useMemo(
+    () => dataset.authorizations.filter((a) => a.engagementId === currentEngagement?.id),
+    [dataset, currentEngagement],
+  );
+
+  const customerDecisions = useMemo(
+    () => dataset.customerDecisions.filter((d) => d.engagementId === currentEngagement?.id),
+    [dataset, currentEngagement],
+  );
+
+  const pendingApprovals = useMemo<PendingApproval[]>(
+    () =>
+      currentEngagement
+        ? buildPendingApprovals({
+            engagementId: currentEngagement.id,
+            authorizations: engagementAuthorizations,
+            siteRecords,
+            decisions: customerDecisions,
+          })
+        : [],
+    [currentEngagement, engagementAuthorizations, siteRecords, customerDecisions],
+  );
+
+  const submitCustomerDecision = useCallback(
+    (input: { item: PendingApproval; outcome: DecisionOutcome; note: string; actorRole: CustomerRole }) => {
+      const engagementId = currentEngagement?.id;
+      if (!engagementId) return;
+      const submittedAt = new Date().toISOString();
+      const decision = buildDecision({
+        id: `dec-${input.item.id}-${submittedAt}`,
+        engagementId,
+        item: input.item,
+        outcome: input.outcome,
+        note: input.note,
+        actorRole: input.actorRole,
+        submittedAt,
+      });
+      store.write((data) => {
+        // One decision per item — replace any prior decision for the same item so
+        // a customer can revise before the consultant reconciles.
+        const others = data.customerDecisions.filter(
+          (d) => !(d.engagementId === engagementId && d.itemId === decision.itemId),
+        );
+        data.customerDecisions = [...others, decision];
+      });
+      refresh();
+    },
+    [store, currentEngagement, refresh],
+  );
+
   const resetDemoData = useCallback(() => {
     store.resetDemoData();
     store.initialize(buildSeedDataset);
@@ -264,9 +323,11 @@ export function RegistryProvider({ children }: { children: ReactNode }) {
     isPageAvailable,
     sites,
     siteRecords,
-    authorizations: dataset.authorizations.filter((a) => a.engagementId === currentEngagement?.id),
+    authorizations: engagementAuthorizations,
     acknowledgments: dataset.acknowledgments,
     contracts: dataset.contracts.filter((c) => c.enterpriseClientId === currentEnterprise?.id),
+    pendingApprovals,
+    submitCustomerDecision,
     portfolioSummary: canonicalPortfolioSummary,
     selectEnterprise,
     selectEngagement,
