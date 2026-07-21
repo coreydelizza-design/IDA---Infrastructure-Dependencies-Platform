@@ -3024,7 +3024,8 @@ select {
 .risk-peek-more { margin-top: 2px; color: var(--ink-400); font-size: 8.6px; }
 .risk-peek-empty { display: block; color: var(--ink-300); font-size: 9.4px; line-height: 1.4; }
 
-/* --- B. Overlay inspector (opt-in): grid keeps full width, pane floats --- */
+/* --- B. Overlay inspector (opt-in): grid uses the freed width, pane floats
+   over RESERVED space so no card is ever covered. --- */
 .workspace.overlay-inspector.with-detail { grid-template-columns: minmax(0, 1fr); }
 .workspace.overlay-inspector .detail-pane {
   position: absolute;
@@ -3033,12 +3034,15 @@ select {
   z-index: 20;
   box-shadow: -6px 10px 40px var(--scrim-a05);
 }
-/* Release the locked 858px frame so the grid uses the full freed width — more
-   columns of cards, at their natural size, instead of the compressed three. The
-   pane floats over the rightmost cards, which return to view when it closes. */
-.workspace.overlay-inspector .site-collection-frame {
-  width: 100%;
-  max-width: 100%;
+/* Release the locked 858px frame so the grid uses the freed width — more columns
+   of full-size cards instead of the compressed three — but reserve the
+   inspector's footprint on the right so the floating pane never covers a card.
+   Reserve = --detail-pane-width (480) + its 12/8 margins + an 8px gap. */
+.workspace.overlay-inspector .site-collection-frame,
+.workspace.overlay-inspector .portfolio-summary {
+  width: calc(100% - (var(--detail-pane-width) + 28px));
+  max-width: calc(100% - (var(--detail-pane-width) + 28px));
+  margin-right: auto;
 }
 .workspace.overlay-inspector .site-grid {
   grid-template-columns: repeat(auto-fill, minmax(262px, 1fr));
