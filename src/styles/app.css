@@ -2943,3 +2943,29 @@ select {
 .export-req-row strong { color: var(--ink-200); font-size: 9.5px; }
 .export-req-row span { color: var(--ink-300); font-size: 9.5px; }
 .export-req-row em { font-style: normal; font-size: 9px; font-weight: 600; text-transform: capitalize; }
+
+/* White-label brand logo (only rendered when a customer logo is configured;
+   the neutral/seeded default keeps the locked Shield wordmark untouched). */
+.brand-logo { display: block; width: auto; height: 28px; max-width: 132px; object-fit: contain; }
+.brand.has-logo .brand-mark { width: auto; max-width: 136px; height: 30px; filter: none; }
+
+/* Branding settings (Administration) */
+.branding-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(300px, 0.9fr); gap: 14px; margin-top: 18px; }
+.branding-fields { display: grid; gap: 14px; align-content: start; padding: 18px; border: 1px solid var(--border-default); border-radius: 6px; background: rgba(8, 27, 47, 0.82); }
+.branding-field { display: grid; gap: 5px; }
+.branding-field > span { color: var(--ink-200); font-size: 10px; font-weight: 600; }
+.branding-field input[type="text"] { height: 34px; padding: 0 10px; border: 1px solid var(--border-default); border-radius: 5px; background: var(--navy-850); color: var(--ink-050); font-size: 11px; }
+.branding-field input[type="text"]:focus { outline: none; border-color: var(--border-strong); }
+.branding-field input:disabled { opacity: 0.5; }
+.branding-field small { color: var(--ink-500); font-size: 8.6px; }
+.branding-logo-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.branding-url-row { display: flex; gap: 8px; }
+.branding-url-row input { flex: 1; }
+.branding-error { margin: 0; color: #ff9b9b; font-size: 9.5px; }
+.branding-note { margin: 2px 0 0; color: var(--ink-500); font-size: 8.8px; line-height: 1.5; }
+
+.branding-preview { display: grid; gap: 10px; align-content: start; padding: 18px; border: 1px solid var(--border-default); border-radius: 6px; background: linear-gradient(180deg, #102943 0%, #0b2036 100%); }
+.branding-preview-label { color: var(--ink-400); font-size: 9px; font-weight: 650; letter-spacing: 0.5px; text-transform: uppercase; }
+.branding-preview-header { display: flex; align-items: center; height: 51px; padding: 0 8px; border: 1px solid var(--border-default); border-radius: 6px; background: linear-gradient(180deg, var(--navy-875) 0%, #061528 100%); }
+.branding-preview-meta { display: flex; align-items: center; gap: 7px; color: var(--ink-500); font-size: 8.8px; }
+.branding-preview-meta svg { color: var(--blue-300); flex-shrink: 0; }

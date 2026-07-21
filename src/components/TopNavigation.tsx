@@ -77,13 +77,26 @@ function TenantSelector() {
 }
 
 export function TopNavigation({ activePage, roleMode, onNavigate, onRoleModeChange }: TopNavigationProps) {
+  const registry = useRegistry();
+  const { branding } = registry;
   return (
     <header className="top-navigation">
-      <button className="brand" type="button" onClick={() => onNavigate("sites")} aria-label="ResiliLink home">
-        <span className="brand-mark"><Shield size={27} strokeWidth={2.25} /></span>
+      <button
+        className={`brand${branding.logoUrl ? " has-logo" : ""}`}
+        type="button"
+        onClick={() => onNavigate("sites")}
+        aria-label={`${branding.brandName} home`}
+      >
+        <span className="brand-mark">
+          {branding.logoUrl ? (
+            <img className="brand-logo" src={branding.logoUrl} alt={branding.logoAlt} />
+          ) : (
+            <Shield size={27} strokeWidth={2.25} />
+          )}
+        </span>
         <span className="brand-copy">
-          <strong>ResiliLink</strong>
-          <small>Site Resiliency Registry</small>
+          <strong>{branding.brandName}</strong>
+          <small>{branding.productLabel}</small>
         </span>
       </button>
 

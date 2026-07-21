@@ -1,5 +1,7 @@
 // Consultancy and enterprise organization aggregates.
 
+import type { BrandingConfig } from "./branding";
+
 export type ConsultancyOrganizationStatus = "active" | "suspended" | "archived";
 
 export interface ConsultancyOrganization {
@@ -23,6 +25,8 @@ export interface EnterpriseClient {
   headquartersCountry: string;
   status: EnterpriseClientStatus;
   externalReference: string | null;
+  /** White-label branding overrides. Null/absent → neutral defaults + this name. */
+  branding?: BrandingConfig | null;
   createdAt: string;
   updatedAt: string;
 }

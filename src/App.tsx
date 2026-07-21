@@ -13,6 +13,7 @@ import { LoaWorkspace } from "./features/loa/LoaWorkspace";
 import { RequirementsPage } from "./features/requirements/RequirementsPage";
 import { ConnectorsPage } from "./features/connectors/ConnectorsPage";
 import { RegulatoryExportPage } from "./features/reports/RegulatoryExportPage";
+import { BrandingSettingsPage } from "./features/branding/BrandingSettingsPage";
 
 const pageTitles: Record<WorkspacePage, string> = {
   sites: "Sites",
@@ -134,6 +135,8 @@ function AppShell() {
           <ConnectorsPage />
         ) : registry.activePage === "reports" ? (
           <RegulatoryExportPage />
+        ) : registry.activePage === "administration" || registry.activePage === "configuration" ? (
+          <BrandingSettingsPage />
         ) : registry.activePage === "requirements" || registry.activePage === "dora" || registry.activePage === "ict" || registry.activePage === "compliance" ? (
           <RequirementsPage />
         ) : (
