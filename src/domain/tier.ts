@@ -37,6 +37,7 @@ export const FULL_ONLY_PAGES: ReadonlySet<string> = new Set<string>([
   "loa",
   "carrier-engagements",
   "documents",
+  "imports",
   "reports",
   "audit",
 ]);

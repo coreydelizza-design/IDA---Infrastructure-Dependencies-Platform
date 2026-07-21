@@ -1,4 +1,4 @@
-import { DEMO_ENGAGEMENTS, DEMO_ENTERPRISES } from "./seed";
+import { DEMO_CONTRACTS, DEMO_ENGAGEMENTS, DEMO_ENTERPRISES } from "./seed";
 import type {
   AssuranceSnapshot,
   AuditEvent,
@@ -6,6 +6,7 @@ import type {
   Circuit,
   CloudResource,
   ConsultancyOrganization,
+  Contract,
   ControlResult,
   CriticalService,
   DataGap,
@@ -49,6 +50,7 @@ export interface RegistryDataset {
   fieldProvenance: FieldProvenance[];
   authorizations: EnterpriseAuthorizationSummary[];
   acknowledgments: CarrierAcknowledgmentSummary[];
+  contracts: Contract[];
   audit: AuditEvent[];
 }
 
@@ -77,7 +79,7 @@ export function resolveStorage(): StorageLike {
   return createMemoryStorage();
 }
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 const STORAGE_KEY = "ida.registry.v1";
 
 // v2 backfill: the canonical seeded enterprise carries explicit branding that
@@ -112,6 +114,14 @@ function migrate(envelope: PersistedEnvelope): PersistedEnvelope {
     const engIds = new Set((current.data.engagements ?? []).map((e) => e.id));
     for (const g of DEMO_ENGAGEMENTS) if (!engIds.has(g.id)) current.data.engagements.push({ ...g });
     current.schemaVersion = 3;
+  }
+  if (current.schemaVersion < 4) {
+    // v4: contract repository. Add the collection (absent before v4) and seed the
+    // demo MSAs/contracts by id if missing.
+    if (!Array.isArray(current.data.contracts)) current.data.contracts = [];
+    const ids = new Set(current.data.contracts.map((c) => c.id));
+    for (const c of DEMO_CONTRACTS) if (!ids.has(c.id)) current.data.contracts.push({ ...c });
+    current.schemaVersion = 4;
   }
   return current;
 }

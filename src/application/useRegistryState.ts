@@ -21,6 +21,7 @@ export type WorkspacePage =
   | "loa"
   | "carrier-engagements"
   | "documents"
+  | "imports"
   | "configuration"
   | "users"
   | "audit"

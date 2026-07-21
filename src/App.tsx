@@ -5,6 +5,7 @@ import { usePersona } from "./application/persona";
 import { useRegistryState, type WorkspacePage } from "./application/useRegistryState";
 import { ProjectInventoryPage } from "./features/projects/ProjectInventoryPage";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
+import { ContractsPage } from "./features/contracts/ContractsPage";
 import { SiteIntakeModal } from "./components/intake/SiteIntakeModal";
 import type { SiteRecord } from "./domain";
 import { AppFooter } from "./components/AppFooter";
@@ -37,6 +38,7 @@ const pageTitles: Record<WorkspacePage, string> = {
   loa: "LOA Workspace",
   "carrier-engagements": "Carrier Engagements",
   documents: "Documents",
+  imports: "Data Imports",
   configuration: "Configuration",
   users: "Users & Roles",
   audit: "Audit Log",
@@ -148,6 +150,8 @@ function AppShell() {
         ) : registry.activePage === "loa" || registry.activePage === "carrier-engagements" ? (
           <LoaWorkspace />
         ) : registry.activePage === "documents" ? (
+          <ContractsPage onNavigate={registry.setActivePage} />
+        ) : registry.activePage === "imports" ? (
           <ConnectorsPage />
         ) : registry.activePage === "reports" ? (
           <RegulatoryExportPage />
