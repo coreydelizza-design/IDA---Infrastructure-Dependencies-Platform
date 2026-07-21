@@ -32,11 +32,13 @@ inventory layout**.
 - **Docked** (default) — the locked behavior: the inspector docks beside the grid
   in its 480px column and the grid holds its canonical three-column, 858px width.
   This is the approved baseline and is unchanged.
-- **Overlay** — the grid's locked 858px frame is released so it uses the **full
-  width** (`repeat(auto-fill, minmax(262px, 1fr))` → more columns of full-size
-  cards instead of the compressed three), and the inspector **floats** over the
-  rightmost cards. Those cards return to view when the inspector closes. Opening a
-  site never compresses the grid.
+- **Overlay** — the grid's locked 858px frame is released so it uses the freed
+  width (`repeat(auto-fill, minmax(262px, 1fr))` → full-size cards instead of the
+  compressed three), and the inspector floats. The grid and the KPI strip
+  **reserve the inspector's footprint** on the right (`width: calc(100% -
+  (--detail-pane-width + 28px))`), so the floating pane **never covers a card** —
+  every card and the summary strip stay fully visible beside it. Opening a site
+  never compresses the grid.
 
 Implemented purely as `.workspace.overlay-inspector` CSS overrides (App.tsx adds
 the class only when the preference is overlay and the inspector is open), so
