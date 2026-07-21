@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { RegistryProvider } from "./application/registryContext";
+import { useInspectorLayout } from "./application/inspectorLayout";
 import { useRegistryState, type WorkspacePage } from "./application/useRegistryState";
 import { SiteIntakeModal } from "./components/intake/SiteIntakeModal";
 import type { SiteRecord } from "./domain";
@@ -52,6 +53,7 @@ export default function App() {
 
 function AppShell() {
   const registry = useRegistryState();
+  const { layout: inspectorLayout } = useInspectorLayout();
   const [intake, setIntake] = useState<{ open: boolean; mode: "create" | "edit"; editingSite: SiteRecord | null }>({ open: false, mode: "create", editingSite: null });
 
   const openCreate = () => setIntake({ open: true, mode: "create", editingSite: null });
@@ -91,7 +93,7 @@ function AppShell() {
       />
       <Sidebar activePage={registry.activePage} onNavigate={registry.setActivePage} />
 
-      <div className={`workspace ${showSiteWorkspace && registry.detailsOpen ? "with-detail" : "without-detail"}`}>
+      <div className={`workspace ${showSiteWorkspace && registry.detailsOpen ? "with-detail" : "without-detail"}${showSiteWorkspace && registry.detailsOpen && inspectorLayout === "overlay" ? " overlay-inspector" : ""}`}>
         {showSiteWorkspace ? (
           <>
             <SiteInventoryPage
