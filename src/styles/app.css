@@ -1007,7 +1007,7 @@ select {
 .score-ring span {
   position: relative;
   z-index: 1;
-  color: white;
+  color: var(--text-strong);
   font-weight: 650;
   letter-spacing: -0.4px;
 }
@@ -1387,7 +1387,7 @@ select {
 
 .detail-header h2 {
   margin: 8px 0 0;
-  color: white;
+  color: var(--text-strong);
   font-size: 20px;
   font-weight: 600;
   letter-spacing: -0.45px;
@@ -2174,7 +2174,7 @@ select {
 
 .modal-heading h2 {
   margin: 0;
-  color: white;
+  color: var(--text-strong);
   font-size: 17px;
   font-weight: 600;
 }
@@ -2347,7 +2347,7 @@ select {
 
 .secondary-page-heading h1 {
   margin: 4px 0 0;
-  color: white;
+  color: var(--text-strong);
   font-size: 24px;
   font-weight: 600;
   letter-spacing: -0.5px;
@@ -2728,7 +2728,7 @@ select {
 
 .placeholder-card h1 {
   margin: 16px 0 0;
-  color: white;
+  color: var(--text-strong);
   font-size: 23px;
   font-weight: 600;
 }
@@ -2985,6 +2985,6 @@ select {
 .lite-gate-page { display: grid; place-items: center; }
 .lite-gate-card { display: grid; justify-items: center; gap: 8px; max-width: 460px; padding: 34px; text-align: center; border: 1px solid var(--border-default); border-radius: 8px; background: var(--ov-navy-a22); }
 .lite-gate-icon { display: grid; place-items: center; width: 46px; height: 46px; margin-bottom: 4px; border-radius: 50%; color: var(--blue-300); background: var(--tint-blue-a27); border: 1px solid var(--border-strong); }
-.lite-gate-card h1 { margin: 2px 0 0; color: white; font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+.lite-gate-card h1 { margin: 2px 0 0; color: var(--text-strong); font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
 .lite-gate-card p { margin: 0; color: var(--ink-400); font-size: 10px; line-height: 1.6; }
 .lite-gate-card .primary-button { margin-top: 8px; }
