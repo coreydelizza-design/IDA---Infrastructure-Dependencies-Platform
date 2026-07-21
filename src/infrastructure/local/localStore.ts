@@ -8,6 +8,7 @@ import type {
   ConsultancyOrganization,
   Contract,
   ControlResult,
+  CustomerDecision,
   CriticalService,
   DataGap,
   Dependency,
@@ -51,6 +52,7 @@ export interface RegistryDataset {
   authorizations: EnterpriseAuthorizationSummary[];
   acknowledgments: CarrierAcknowledgmentSummary[];
   contracts: Contract[];
+  customerDecisions: CustomerDecision[];
   audit: AuditEvent[];
 }
 
@@ -79,7 +81,7 @@ export function resolveStorage(): StorageLike {
   return createMemoryStorage();
 }
 
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 const STORAGE_KEY = "ida.registry.v1";
 
 // v2 backfill: the canonical seeded enterprise carries explicit branding that
@@ -122,6 +124,13 @@ function migrate(envelope: PersistedEnvelope): PersistedEnvelope {
     const ids = new Set(current.data.contracts.map((c) => c.id));
     for (const c of DEMO_CONTRACTS) if (!ids.has(c.id)) current.data.contracts.push({ ...c });
     current.schemaVersion = 4;
+  }
+  if (current.schemaVersion < 5) {
+    // v5: governed customer actions. Add the decisions collection (absent before
+    // v5). It starts empty — decisions are authored by customers at runtime, never
+    // seeded. Canonical authorizations/risks are untouched.
+    if (!Array.isArray(current.data.customerDecisions)) current.data.customerDecisions = [];
+    current.schemaVersion = 5;
   }
   return current;
 }

@@ -432,6 +432,7 @@ export function buildSeedDataset(): RegistryDataset {
       { id: "ack-emea-gtt", authorizationId: "auth-emea-gtt-2026", carrierId: "provider-gtt", status: "not-submitted", receivedAt: null, notes: "" },
     ],
     contracts: [...DEMO_CONTRACTS],
+    customerDecisions: [],
     audit: [
       { id: "audit-seed", engagementId: ENGAGEMENT_ID, actorUserId: "user-engagement-lead", actorRole: "engagement-lead", entityType: "engagement", entityId: ENGAGEMENT_ID, action: "engagement-created", timestamp: NOW, beforeSummary: null, afterSummary: "Engagement seeded", source: "seed" },
     ],

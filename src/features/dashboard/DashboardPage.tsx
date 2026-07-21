@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { useRegistry } from "../../application/registryContext";
 import type { WorkspacePage } from "../../application/useRegistryState";
 import { buildDashboard, ENGAGEMENT_STATUS_LABELS, type HealthBand } from "../../domain";
+import { ActionsRequiredPanel } from "./ActionsRequiredPanel";
 
 interface DashboardPageProps {
   onNavigate: (page: WorkspacePage) => void;
@@ -49,6 +50,8 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
         <section className="dashboard-kpi"><span>Evidence confidence</span><strong>{metrics.averageEvidenceConfidence}%</strong><small>{metrics.assessmentCoveragePercent}% coverage</small></section>
         <section className="dashboard-kpi"><span>Open critical risks</span><strong className={metrics.openCriticalRiskCount > 0 ? "risk-text" : "no-risk-text"}>{metrics.openCriticalRiskCount}</strong><small>{metrics.totalOpenRiskCount} open total</small></section>
       </div>
+
+      <ActionsRequiredPanel />
 
       <div className="dashboard-body">
         <section className="dashboard-panel dashboard-distribution">
