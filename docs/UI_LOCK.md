@@ -131,3 +131,11 @@ nothing functional. This surfaces the switch and gives the pills a real job.
 Backed by the existing `persona` model; the pill is the visible front-end of
 `setPersona`. The toggle sizes to the client name (the fixed 171 px halves would
 truncate most names). Everything else in the locked shell is unchanged.
+
+**Re-baselined 2026-07-21** (product-owner approved): `docs/reference-site-inventory.png`
+was regenerated from the default Site Inventory at 1672 × 941 (dark theme, DC1 –
+London selected). It is identical to the prior reference except the top-bar pill
+labels (`Workspace / Enterprise Co.`). The Playwright snapshot at
+`tests/e2e/site-inventory.spec.ts-snapshots/site-inventory-linux.png` must be
+regenerated in an environment where the e2e suite is present (it is not tracked in
+this checkout) before the visual test will pass against the new labels.
