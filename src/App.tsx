@@ -10,6 +10,7 @@ import { SiteIntakeModal } from "./components/intake/SiteIntakeModal";
 import type { SiteRecord } from "./domain";
 import { AppFooter } from "./components/AppFooter";
 import { DetailPane } from "./components/DetailPane";
+import { FullscreenSiteCard } from "./components/FullscreenSiteCard";
 import { LiteGatePage } from "./components/LiteGatePage";
 import { PlaceholderPage } from "./components/PlaceholderPage";
 import { Sidebar } from "./components/Sidebar";
@@ -94,6 +95,10 @@ function AppShell() {
   // Consultant-only Project Inventory; a customer landing here is redirected to the registry.
   const showProjects = registry.activePage === "projects" && capabilities.canSeeAllProjects;
   const showSiteWorkspace = (registry.activePage === "sites" || (registry.activePage === "projects" && !capabilities.canSeeAllProjects)) && !pageGated;
+  // The docked/overlay inspector reserves grid space; the fullscreen projection
+  // does not (it portals over the whole viewport), so the grid stays full width.
+  const dockedOrOverlayOpen = showSiteWorkspace && registry.detailsOpen && inspectorLayout !== "fullscreen";
+  const fullscreenOpen = showSiteWorkspace && registry.detailsOpen && inspectorLayout === "fullscreen" && registry.selectedSite;
 
   return (
     <div className="app-shell">
@@ -103,7 +108,7 @@ function AppShell() {
       />
       <Sidebar activePage={registry.activePage} onNavigate={registry.setActivePage} />
 
-      <div className={`workspace ${showSiteWorkspace && registry.detailsOpen ? "with-detail" : "without-detail"}${showSiteWorkspace && registry.detailsOpen && inspectorLayout === "overlay" ? " overlay-inspector" : ""}`}>
+      <div className={`workspace ${dockedOrOverlayOpen ? "with-detail" : "without-detail"}${dockedOrOverlayOpen && inspectorLayout === "overlay" ? " overlay-inspector" : ""}`}>
         {showProjects ? (
           <ProjectInventoryPage onOpenProject={openProject} />
         ) : showSiteWorkspace ? (
@@ -129,7 +134,7 @@ function AppShell() {
               onToggleFavorite={registry.toggleFavorite}
               onAddSite={capabilities.canOperate ? openCreate : undefined}
             />
-            {registry.detailsOpen && registry.selectedSite ? (
+            {dockedOrOverlayOpen && registry.selectedSite ? (
               <DetailPane
                 site={registry.selectedSite}
                 activeTab={registry.activeTab}
@@ -143,6 +148,14 @@ function AppShell() {
                 onMarkReviewComplete={() => registry.selectedSite && registry.markReviewComplete(registry.selectedSite.id)}
                 onRunAssessment={() => registry.selectedSite && registry.runAssessment(registry.selectedSite.id)}
                 canOperate={capabilities.canOperate}
+              />
+            ) : null}
+            {fullscreenOpen && registry.selectedSite ? (
+              <FullscreenSiteCard
+                site={registry.selectedSite}
+                sites={registry.filteredSites}
+                onSelectSite={registry.selectSite}
+                onClose={registry.closeDetails}
               />
             ) : null}
           </>

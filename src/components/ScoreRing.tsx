@@ -3,13 +3,17 @@ import type { HealthBand } from "../domain/models";
 interface ScoreRingProps {
   score: number;
   band: HealthBand;
-  size?: "card" | "detail";
+  size?: "card" | "detail" | "focus";
 }
 
+const RING_DIMENSIONS = { card: 48, detail: 62, focus: 132 } as const;
+const RING_RADIUS = { card: 20, detail: 26, focus: 58 } as const;
+const RING_STROKE = { card: 3.5, detail: 4, focus: 8 } as const;
+
 export function ScoreRing({ score, band, size = "card" }: ScoreRingProps) {
-  const dimensions = size === "detail" ? 62 : 48;
-  const radius = size === "detail" ? 26 : 20;
-  const strokeWidth = size === "detail" ? 4 : 3.5;
+  const dimensions = RING_DIMENSIONS[size];
+  const radius = RING_RADIUS[size];
+  const strokeWidth = RING_STROKE[size];
   const center = dimensions / 2;
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference * (1 - score / 100);

@@ -1,4 +1,4 @@
-import { Maximize2, Moon, Palette, PanelRight, RotateCcw, Shield, Sun, Upload, X } from "lucide-react";
+import { Expand, Maximize2, Moon, Palette, PanelRight, RotateCcw, Shield, Sun, Upload, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { useRegistry } from "../../application/registryContext";
 import { useInspectorLayout, type InspectorLayout } from "../../application/inspectorLayout";
@@ -22,6 +22,7 @@ const THEMES: Array<{ value: Theme; label: string; hint: string }> = [
 const LAYOUTS: Array<{ value: InspectorLayout; label: string; hint: string }> = [
   { value: "docked", label: "Docked", hint: "Inspector beside grid" },
   { value: "overlay", label: "Overlay", hint: "Grid stays full width" },
+  { value: "fullscreen", label: "Fullscreen", hint: "Large readable card" },
 ];
 const PERSONAS: Array<{ value: Persona; hint: string }> = [
   { value: "consultant", hint: "Operate all projects" },
@@ -195,7 +196,7 @@ export function BrandingSettingsPage() {
       <section className="tier-panel">
         <div className="tier-panel-head">
           <span className="eyebrow">Site inventory layout</span>
-          <p>How the detail inspector opens. Docked places it beside the card grid (the grid reflows to three columns). Overlay keeps the grid full width and floats the inspector over the right edge, so opening a site never compresses the cards. Per-viewer preference.</p>
+          <p>How opening a site presents. Docked places the inspector beside the card grid (the grid reflows to three columns). Overlay keeps the grid full width and floats the inspector over the right edge, so opening a site never compresses the cards. Fullscreen projects the selected site as a large, readable card over the whole screen — rendered at true size, so its text stays legible on smaller displays. Per-viewer preference.</p>
         </div>
         <div className="tier-toggle" role="radiogroup" aria-label="Inspector layout">
           {LAYOUTS.map((l) => (
@@ -207,7 +208,7 @@ export function BrandingSettingsPage() {
               className={layout === l.value ? "active" : ""}
               onClick={() => setLayout(l.value)}
             >
-              {l.value === "docked" ? <PanelRight size={14} /> : <Maximize2 size={14} />}
+              {l.value === "docked" ? <PanelRight size={14} /> : l.value === "overlay" ? <Maximize2 size={14} /> : <Expand size={14} />}
               <strong>{l.label}</strong>
               <small>{l.hint}</small>
             </button>
