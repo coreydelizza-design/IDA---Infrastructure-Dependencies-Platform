@@ -221,6 +221,8 @@ export function useRegistryState() {
     healthFilter,
     portfolioSummary: registry.portfolioSummary,
     engagementId: currentEngagement?.id ?? null,
+    tier: registry.tier,
+    isPageAvailable: registry.isPageAvailable,
     setActivePage,
     setSearch,
     setTypeFilter,

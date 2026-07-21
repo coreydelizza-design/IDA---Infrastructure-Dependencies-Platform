@@ -5,14 +5,19 @@ import {
   MAX_LOGO_DATA_URL_LENGTH,
   NEUTRAL_BRAND_NAME,
   NEUTRAL_PRODUCT_LABEL,
+  TIER_DESCRIPTIONS,
+  TIER_LABELS,
   isSafeLogoUrl,
+  type DeliveryTier,
 } from "../../domain";
+
+const TIERS: DeliveryTier[] = ["full", "lite"];
 
 const MAX_KB = Math.round(MAX_LOGO_DATA_URL_LENGTH / 1024);
 
 export function BrandingSettingsPage() {
   const registry = useRegistry();
-  const { branding, brandingConfig, currentEnterprise, updateBranding, resetBranding } = registry;
+  const { branding, brandingConfig, currentEnterprise, updateBranding, resetBranding, tier, setTier } = registry;
   const fileRef = useRef<HTMLInputElement>(null);
   const [logoInput, setLogoInput] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -74,6 +79,29 @@ export function BrandingSettingsPage() {
           <RotateCcw size={13} /> Reset to neutral
         </button>
       </div>
+
+      <section className="tier-panel">
+        <div className="tier-panel-head">
+          <span className="eyebrow">Delivery mode</span>
+          <p>{TIER_DESCRIPTIONS[tier]}</p>
+        </div>
+        <div className="tier-toggle" role="radiogroup" aria-label="Delivery mode">
+          {TIERS.map((t) => (
+            <button
+              key={t}
+              type="button"
+              role="radio"
+              aria-checked={tier === t}
+              className={tier === t ? "active" : ""}
+              disabled={disabled}
+              onClick={() => setTier(t)}
+            >
+              <strong>{TIER_LABELS[t]}</strong>
+              <small>{t === "full" ? "All workspaces" : "Core registry only"}</small>
+            </button>
+          ))}
+        </div>
+      </section>
 
       <div className="branding-grid">
         <section className="branding-fields">

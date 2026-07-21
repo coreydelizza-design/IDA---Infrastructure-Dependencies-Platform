@@ -2969,3 +2969,22 @@ select {
 .branding-preview-header { display: flex; align-items: center; height: 51px; padding: 0 8px; border: 1px solid var(--border-default); border-radius: 6px; background: linear-gradient(180deg, var(--navy-875) 0%, #061528 100%); }
 .branding-preview-meta { display: flex; align-items: center; gap: 7px; color: var(--ink-500); font-size: 8.8px; }
 .branding-preview-meta svg { color: var(--blue-300); flex-shrink: 0; }
+
+/* Delivery mode (lite/full tier) */
+.tier-panel { display: grid; gap: 10px; margin-top: 18px; padding: 16px 18px; border: 1px solid var(--border-default); border-radius: 6px; background: rgba(8, 27, 47, 0.82); }
+.tier-panel-head p { margin: 4px 0 0; color: var(--ink-400); font-size: 9.5px; line-height: 1.5; }
+.tier-toggle { display: flex; gap: 8px; }
+.tier-toggle button { display: grid; gap: 2px; min-width: 150px; padding: 9px 14px; text-align: left; border: 1px solid var(--border-default); border-radius: 5px; background: var(--navy-850); cursor: pointer; }
+.tier-toggle button strong { color: var(--ink-100); font-size: 11px; font-weight: 600; }
+.tier-toggle button small { color: var(--ink-500); font-size: 8.4px; }
+.tier-toggle button.active { border-color: #4b94ff; background: linear-gradient(180deg, #123253 0%, #0c2440 100%); }
+.tier-toggle button.active strong { color: var(--ink-050); }
+.tier-toggle button:disabled { opacity: 0.5; cursor: default; }
+
+/* Lite-tier gate for a full-only workspace */
+.lite-gate-page { display: grid; place-items: center; }
+.lite-gate-card { display: grid; justify-items: center; gap: 8px; max-width: 460px; padding: 34px; text-align: center; border: 1px solid var(--border-default); border-radius: 8px; background: rgba(8, 27, 47, 0.82); }
+.lite-gate-icon { display: grid; place-items: center; width: 46px; height: 46px; margin-bottom: 4px; border-radius: 50%; color: var(--blue-300); background: rgba(47, 121, 246, 0.12); border: 1px solid var(--border-strong); }
+.lite-gate-card h1 { margin: 2px 0 0; color: white; font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+.lite-gate-card p { margin: 0; color: var(--ink-400); font-size: 10px; line-height: 1.6; }
+.lite-gate-card .primary-button { margin-top: 8px; }

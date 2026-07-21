@@ -104,7 +104,7 @@ export function TopNavigation({ activePage, roleMode, onNavigate, onRoleModeChan
         <TenantSelector />
 
         <nav className="primary-nav" aria-label="Primary navigation">
-          {topItems.map((item) => (
+          {topItems.filter((item) => registry.isPageAvailable(item.page)).map((item) => (
             <button
               key={item.page}
               type="button"
@@ -117,10 +117,13 @@ export function TopNavigation({ activePage, roleMode, onNavigate, onRoleModeChan
         </nav>
 
         <div className="top-navigation-actions">
-          <div className="role-mode-toggle" aria-label="Workspace role mode">
-            <button className={roleMode === "loa" ? "active" : ""} type="button" onClick={() => onRoleModeChange("loa")}>LOA View</button>
-            <button className={roleMode === "carrier" ? "active" : ""} type="button" onClick={() => onRoleModeChange("carrier")}>Carrier View</button>
-          </div>
+          {/* Role modes drive carrier/LOA collaboration, which is a full-tier feature. */}
+          {registry.isPageAvailable("loa") ? (
+            <div className="role-mode-toggle" aria-label="Workspace role mode">
+              <button className={roleMode === "loa" ? "active" : ""} type="button" onClick={() => onRoleModeChange("loa")}>LOA View</button>
+              <button className={roleMode === "carrier" ? "active" : ""} type="button" onClick={() => onRoleModeChange("carrier")}>Carrier View</button>
+            </div>
+          ) : null}
           <button className="header-icon status-icon" type="button" aria-label="System status"><CircleCheckBig size={17} /></button>
           <button className="header-icon notification-icon" type="button" aria-label="Notifications">
             <Bell size={17} />

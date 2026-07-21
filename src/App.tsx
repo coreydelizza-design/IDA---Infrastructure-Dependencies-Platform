@@ -5,6 +5,7 @@ import { SiteIntakeModal } from "./components/intake/SiteIntakeModal";
 import type { SiteRecord } from "./domain";
 import { AppFooter } from "./components/AppFooter";
 import { DetailPane } from "./components/DetailPane";
+import { LiteGatePage } from "./components/LiteGatePage";
 import { PlaceholderPage } from "./components/PlaceholderPage";
 import { Sidebar } from "./components/Sidebar";
 import { SiteInventoryPage } from "./components/SiteInventoryPage";
@@ -77,7 +78,8 @@ function AppShell() {
     };
   }, []);
 
-  const showSiteWorkspace = registry.activePage === "sites";
+  const pageGated = !registry.isPageAvailable(registry.activePage);
+  const showSiteWorkspace = registry.activePage === "sites" && !pageGated;
 
   return (
     <div className="app-shell">
@@ -129,6 +131,8 @@ function AppShell() {
               />
             ) : null}
           </>
+        ) : pageGated ? (
+          <LiteGatePage title={pageTitles[registry.activePage]} onGoToInventory={() => registry.setActivePage("sites")} />
         ) : registry.activePage === "loa" || registry.activePage === "carrier-engagements" ? (
           <LoaWorkspace />
         ) : registry.activePage === "documents" ? (

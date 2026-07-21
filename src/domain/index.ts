@@ -1,6 +1,7 @@
 // Domain barrel — single import surface for the consultancy-assurance registry.
 export * from "./organizations";
 export * from "./branding";
+export * from "./tier";
 export * from "./engagements";
 export * from "./contacts";
 export * from "./providers";
