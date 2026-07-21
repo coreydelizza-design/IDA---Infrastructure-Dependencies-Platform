@@ -50,6 +50,8 @@ interface DetailPaneProps {
   onDuplicateSite?: () => void;
   onMarkReviewComplete?: () => void;
   onRunAssessment?: () => void;
+  /** Operator actions (assess/edit/duplicate/archive). Hidden for read-only viewers. */
+  canOperate?: boolean;
 }
 
 const tabLabels: Array<{ id: DetailTab; label: string }> = [
@@ -263,7 +265,7 @@ function HistoryPanel({ site }: { site: Site }) {
   );
 }
 
-export function DetailPane({ site, activeTab, roleMode, onTabChange, onClose, onToggleFavorite, onEditSite, onArchiveSite, onDuplicateSite, onMarkReviewComplete, onRunAssessment }: DetailPaneProps) {
+export function DetailPane({ site, activeTab, roleMode, onTabChange, onClose, onToggleFavorite, onEditSite, onArchiveSite, onDuplicateSite, onMarkReviewComplete, onRunAssessment, canOperate = true }: DetailPaneProps) {
   const criticalRisks = site.risks.filter((risk) => risk.severity === "critical" && risk.status !== "closed").length;
   const servicesAssuredPercent = Math.round((site.criticalServices.filter((service) => assuredServiceStates.includes(service.assuranceState)).length / Math.max(site.criticalServices.length, 1)) * 100);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -280,19 +282,21 @@ export function DetailPane({ site, activeTab, roleMode, onTabChange, onClose, on
           <span className={`site-type-chip ${site.type.includes("Branch") ? "type-amber" : site.type.includes("Edge") ? "type-red" : "type-green"}`}>{site.type}</span>
           <div>
             <button type="button" className={site.favorite ? "active" : ""} onClick={onToggleFavorite} aria-label="Toggle favorite"><Star size={17} fill={site.favorite ? "currentColor" : "none"} /></button>
-            <div className="detail-action-menu">
-              <button type="button" aria-label="More site actions" aria-haspopup="menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((v) => !v)}><MoreVertical size={17} /></button>
-              {menuOpen ? (
-                <div className="detail-action-dropdown" role="menu">
-                  <button type="button" role="menuitem" onClick={() => runAction(onRunAssessment)}>Run Assessment</button>
-                  <button type="button" role="menuitem" onClick={() => runAction(onEditSite)}>Edit Site</button>
-                  <button type="button" role="menuitem" onClick={() => runAction(onDuplicateSite)}>Duplicate as Draft</button>
-                  <button type="button" role="menuitem" onClick={() => runAction(onMarkReviewComplete)}>Mark Review Complete</button>
-                  <button type="button" role="menuitem" onClick={() => runAction(() => onTabChange("history"))}>View Audit History</button>
-                  <button type="button" role="menuitem" className="danger" onClick={() => runAction(onArchiveSite)}>Archive Site</button>
-                </div>
-              ) : null}
-            </div>
+            {canOperate ? (
+              <div className="detail-action-menu">
+                <button type="button" aria-label="More site actions" aria-haspopup="menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((v) => !v)}><MoreVertical size={17} /></button>
+                {menuOpen ? (
+                  <div className="detail-action-dropdown" role="menu">
+                    <button type="button" role="menuitem" onClick={() => runAction(onRunAssessment)}>Run Assessment</button>
+                    <button type="button" role="menuitem" onClick={() => runAction(onEditSite)}>Edit Site</button>
+                    <button type="button" role="menuitem" onClick={() => runAction(onDuplicateSite)}>Duplicate as Draft</button>
+                    <button type="button" role="menuitem" onClick={() => runAction(onMarkReviewComplete)}>Mark Review Complete</button>
+                    <button type="button" role="menuitem" onClick={() => runAction(() => onTabChange("history"))}>View Audit History</button>
+                    <button type="button" role="menuitem" className="danger" onClick={() => runAction(onArchiveSite)}>Archive Site</button>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
             <button type="button" onClick={onClose} aria-label="Close detail pane"><X size={17} /></button>
           </div>
         </div>
