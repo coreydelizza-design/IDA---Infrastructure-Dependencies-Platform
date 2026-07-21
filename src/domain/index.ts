@@ -3,6 +3,7 @@ export * from "./organizations";
 export * from "./branding";
 export * from "./tier";
 export * from "./projects";
+export * from "./dashboard";
 export * from "./engagements";
 export * from "./contacts";
 export * from "./providers";

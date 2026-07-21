@@ -55,9 +55,9 @@ export function useRegistryState() {
   const [activeTab, setActiveTab] = useState<DetailTab>((initialParam("tab") as DetailTab) ?? "overview");
   const [inventoryView, setInventoryView] = useState<InventoryView>((initialParam("view") as InventoryView) ?? "grid");
   const [roleMode, setRoleMode] = useState<RoleMode>((initialParam("mode") as RoleMode) ?? "loa");
-  // Consultants land on their Project Inventory; customers land in the registry.
+  // Consultants land on their Project Inventory; customers land on their dashboard.
   const [activePage, setActivePage] = useState<WorkspacePage>(
-    () => (initialParam("page") as WorkspacePage) ?? (readStoredPersona() === "customer" ? "sites" : "projects"),
+    () => (initialParam("page") as WorkspacePage) ?? (readStoredPersona() === "customer" ? "dashboard" : "projects"),
   );
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");

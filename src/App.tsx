@@ -4,6 +4,7 @@ import { useInspectorLayout } from "./application/inspectorLayout";
 import { usePersona } from "./application/persona";
 import { useRegistryState, type WorkspacePage } from "./application/useRegistryState";
 import { ProjectInventoryPage } from "./features/projects/ProjectInventoryPage";
+import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { SiteIntakeModal } from "./components/intake/SiteIntakeModal";
 import type { SiteRecord } from "./domain";
 import { AppFooter } from "./components/AppFooter";
@@ -150,6 +151,8 @@ function AppShell() {
           <ConnectorsPage />
         ) : registry.activePage === "reports" ? (
           <RegulatoryExportPage />
+        ) : registry.activePage === "dashboard" ? (
+          <DashboardPage onNavigate={registry.setActivePage} />
         ) : registry.activePage === "administration" || registry.activePage === "configuration" ? (
           <BrandingSettingsPage />
         ) : registry.activePage === "requirements" || registry.activePage === "dora" || registry.activePage === "ict" || registry.activePage === "compliance" ? (
