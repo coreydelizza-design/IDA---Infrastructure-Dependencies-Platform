@@ -99,9 +99,7 @@ function AppShell() {
     <div className="app-shell">
       <TopNavigation
         activePage={registry.activePage}
-        roleMode={registry.roleMode}
         onNavigate={registry.setActivePage}
-        onRoleModeChange={registry.changeRoleMode}
       />
       <Sidebar activePage={registry.activePage} onNavigate={registry.setActivePage} />
 

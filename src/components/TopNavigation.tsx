@@ -1,15 +1,12 @@
 import { Bell, ChevronDown, CircleCheckBig, FolderKanban, Shield, UserRound } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { RoleMode } from "../domain/models";
 import { useRegistry } from "../application/registryContext";
 import { usePersona } from "../application/persona";
 import type { WorkspacePage } from "../application/useRegistryState";
 
 interface TopNavigationProps {
   activePage: WorkspacePage;
-  roleMode: RoleMode;
   onNavigate: (page: WorkspacePage) => void;
-  onRoleModeChange: (mode: RoleMode) => void;
 }
 
 // Note: the primary nav mirrors the locked reference exactly. "Return to
@@ -86,11 +83,17 @@ function TenantSelector({ onViewAllProjects }: { onViewAllProjects?: () => void 
   );
 }
 
-export function TopNavigation({ activePage, roleMode, onNavigate, onRoleModeChange }: TopNavigationProps) {
+export function TopNavigation({ activePage, onNavigate }: TopNavigationProps) {
   const registry = useRegistry();
   const { branding } = registry;
-  const { capabilities } = usePersona();
+  const { persona, setPersona, capabilities } = usePersona();
   const home: WorkspacePage = capabilities.canSeeAllProjects ? "projects" : "sites";
+  // The top-bar pills switch the operator between their Workspace and a read-only
+  // preview of exactly what the selected client sees (their Customer Dashboard).
+  // The client pill is labelled with the currently selected enterprise.
+  const clientName = registry.currentEnterprise?.name ?? "Customer";
+  const selectWorkspace = () => { if (persona !== "consultant") { setPersona("consultant"); onNavigate("projects"); } };
+  const selectClientView = () => { if (persona !== "customer") { setPersona("customer"); onNavigate("dashboard"); } };
   return (
     <header className="top-navigation">
       <button
@@ -129,11 +132,15 @@ export function TopNavigation({ activePage, roleMode, onNavigate, onRoleModeChan
         </nav>
 
         <div className="top-navigation-actions">
-          {/* Role modes drive carrier/LOA collaboration, which is a full-tier feature. */}
-          {registry.isPageAvailable("loa") ? (
-            <div className="role-mode-toggle" aria-label="Workspace role mode">
-              <button className={roleMode === "loa" ? "active" : ""} type="button" onClick={() => onRoleModeChange("loa")}>LOA View</button>
-              <button className={roleMode === "carrier" ? "active" : ""} type="button" onClick={() => onRoleModeChange("carrier")}>Carrier View</button>
+          {/* Workspace ↔ Customer view. The operator works in Workspace (registry,
+              LOA, carrier, reconciliation) and can preview the read-only dashboard
+              the selected client sees. The client pill tracks the chosen enterprise. */}
+          {registry.currentEnterprise ? (
+            <div className="role-mode-toggle view-mode-toggle" role="radiogroup" aria-label="View mode">
+              <button role="radio" aria-checked={persona === "consultant"} className={persona === "consultant" ? "active" : ""} type="button" onClick={selectWorkspace}>Workspace</button>
+              <button role="radio" aria-checked={persona === "customer"} className={persona === "customer" ? "active" : ""} type="button" onClick={selectClientView} title={`Preview ${clientName}'s dashboard`}>
+                <span className="view-mode-client">{clientName}</span>
+              </button>
             </div>
           ) : null}
           <button className="header-icon status-icon" type="button" aria-label="System status"><CircleCheckBig size={17} /></button>

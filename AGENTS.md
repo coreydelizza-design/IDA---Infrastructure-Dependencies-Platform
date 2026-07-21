@@ -84,6 +84,7 @@ in time. It never represents live operational network condition.
 - Do not use the reference image or any screenshot as a page background, rasterized card, or flattened interaction layer.
 - Preserve real React/DOM components, accessible names, keyboard behavior, and typed data.
 - Preserve the dark navy shell, 51 px top bar, 204 px rail, three-column card grid, 480 px inspector, KPI strip, footer, compact radii, card imagery, status semantics, and initial London selection.
+- **Approved amendment A1** (`docs/UI_LOCK.md`): the top-right pills, formerly the stubbed `LOA View / Carrier View` role mode, are the **Workspace ↔ Customer view** switch — `Workspace` (consultant operating view) and a second pill labelled with the selected enterprise client, which previews that client's read-only Customer Dashboard. Backed by `persona` (`setPersona`). LOA/carrier work stays in the consultant view. The reference image + Playwright snapshot need a product-owner re-baseline to reflect this label change; do not auto-regenerate them.
 - Do not introduce Material UI, Ant Design, Bootstrap, generic admin templates, visible default shadcn styling, glassmorphism, a light theme, oversized radii, or marketing-style whitespace.
 - `docs/reference-site-inventory.png` is the product authority. The Playwright snapshot is a regression baseline, not permission to preserve known drift from the authority.
 - Never update the reference image or Playwright snapshot automatically. A baseline change requires explicit product-owner approval and a written visual-gap rationale.

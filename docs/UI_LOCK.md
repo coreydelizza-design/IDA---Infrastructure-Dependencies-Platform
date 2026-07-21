@@ -105,3 +105,29 @@ Any visible change must run the Playwright baseline at 1672 × 941. Structural d
 3. updated UI lock;
 4. updated screenshot baseline;
 5. written rationale in the pull request.
+
+## Approved baseline amendments
+
+Deliberate, product-owner-approved changes to the locked composition are recorded
+here with their rationale. The reference image and Playwright snapshot must be
+re-baselined by the product owner before these are considered the new lock.
+
+### A1 — Top-bar view switch (`Workspace / {client}`)
+
+The top-right pill pair, previously the stubbed **`LOA View / Carrier View`** role
+mode (which only toggled a cosmetic inspector chip), is repurposed into the
+primary **Workspace ↔ Customer view** switch:
+
+- **Workspace** — the consultant's operating view (registry, Site/Project
+  Inventory, LOA, carrier, reconciliation). LOA and carrier work remain inside the
+  consultant view (sidebar workspaces), unchanged.
+- **`{client}`** — the second pill is labelled with the currently selected
+  enterprise client (e.g. *Enterprise Co.*, *Northwind Trading*) and previews the
+  read-only Customer Dashboard exactly as that client sees it.
+
+Rationale: the most-used context switch in the product (operate vs. see-what-the-
+client-sees) was buried in Administration, while the prominent top-bar pills did
+nothing functional. This surfaces the switch and gives the pills a real job.
+Backed by the existing `persona` model; the pill is the visible front-end of
+`setPersona`. The toggle sizes to the client name (the fixed 171 px halves would
+truncate most names). Everything else in the locked shell is unchanged.
