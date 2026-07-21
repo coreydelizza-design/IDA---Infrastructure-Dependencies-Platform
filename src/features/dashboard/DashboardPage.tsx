@@ -4,6 +4,7 @@ import { useRegistry } from "../../application/registryContext";
 import type { WorkspacePage } from "../../application/useRegistryState";
 import { buildDashboard, ENGAGEMENT_STATUS_LABELS, type HealthBand } from "../../domain";
 import { ActionsRequiredPanel } from "./ActionsRequiredPanel";
+import { ReconciliationPanel } from "./ReconciliationPanel";
 
 interface DashboardPageProps {
   onNavigate: (page: WorkspacePage) => void;
@@ -52,6 +53,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
       </div>
 
       <ActionsRequiredPanel />
+      <ReconciliationPanel />
 
       <div className="dashboard-body">
         <section className="dashboard-panel dashboard-distribution">

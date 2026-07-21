@@ -91,7 +91,7 @@ function ActionRow({
         <small>{item.detail} · {item.context}</small>
         {decided ? (
           <span className="dashboard-action-status">
-            <CheckCircle2 size={12} aria-hidden="true" /> {OUTCOME_LABEL[decided.outcome]} · awaiting consultant reconciliation
+            <CheckCircle2 size={12} aria-hidden="true" /> {OUTCOME_LABEL[decided.outcome]} · {decided.reconciliationState === "reconciled" ? "reconciled by consultant" : "awaiting consultant reconciliation"}
             {decided.note ? <em> — “{decided.note}”</em> : null}
           </span>
         ) : null}

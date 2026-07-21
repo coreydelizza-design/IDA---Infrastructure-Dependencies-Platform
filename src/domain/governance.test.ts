@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildDecision, buildPendingApprovals, pendingCount } from "./governance";
+import { buildDecision, buildPendingApprovals, buildReconciliationQueue, parseDecisionTarget, pendingCount, resolveDecisionEffect } from "./governance";
 import type { CustomerDecision, PendingApproval } from "./governance";
 import type { EnterpriseAuthorizationSummary } from "./authorization";
 import type { SiteRecord } from "./sites";
@@ -77,5 +77,61 @@ describe("buildDecision", () => {
       id: "dec-1", engagementId: ENG, itemId: "risk:S1:r1", actionType: "risk-acceptance",
       outcome: "accepted", note: "signed off", actorRole: "enterprise-approver", submittedAt: NOW, reconciliationState: "pending-reconciliation",
     });
+  });
+});
+
+function decision(over: Partial<CustomerDecision>): CustomerDecision {
+  return {
+    id: "dec", engagementId: ENG, itemId: "loa:a1", actionType: "loa-signature",
+    outcome: "approved", note: "", actorRole: "enterprise-sponsor", submittedAt: NOW,
+    reconciliationState: "pending-reconciliation", ...over,
+  };
+}
+
+describe("parseDecisionTarget", () => {
+  it("recovers the authorization id from an LOA decision", () => {
+    expect(parseDecisionTarget(decision({ actionType: "loa-signature", itemId: "loa:auth-emea-gtt-2026" }))).toEqual({ authId: "auth-emea-gtt-2026" });
+  });
+  it("recovers site + risk ids from a risk decision", () => {
+    expect(parseDecisionTarget(decision({ actionType: "risk-acceptance", itemId: "risk:site-1:RSK-205" }))).toEqual({ siteId: "site-1", riskId: "RSK-205" });
+  });
+});
+
+describe("resolveDecisionEffect", () => {
+  it("approved LOA activates the authorization", () => {
+    const e = resolveDecisionEffect(decision({ actionType: "loa-signature", outcome: "approved", itemId: "loa:a1" }));
+    expect(e).toMatchObject({ kind: "authorization", targetId: "a1", nextStatus: "active" });
+  });
+  it("declined LOA makes no canonical change", () => {
+    const e = resolveDecisionEffect(decision({ actionType: "loa-signature", outcome: "declined", itemId: "loa:a1" }));
+    expect(e).toMatchObject({ kind: "none", nextStatus: null });
+  });
+  it("accepted risk sets the risk to accepted", () => {
+    const e = resolveDecisionEffect(decision({ actionType: "risk-acceptance", outcome: "accepted", itemId: "risk:S1:r1" }));
+    expect(e).toMatchObject({ kind: "risk", targetId: "r1", siteId: "S1", nextStatus: "accepted" });
+  });
+  it("declined risk makes no canonical change", () => {
+    const e = resolveDecisionEffect(decision({ actionType: "risk-acceptance", outcome: "declined", itemId: "risk:S1:r1" }));
+    expect(e).toMatchObject({ kind: "none", nextStatus: null });
+  });
+});
+
+describe("buildReconciliationQueue", () => {
+  it("includes only pending decisions for the engagement and resolves titles/effects", () => {
+    const items = buildReconciliationQueue({
+      engagementId: ENG,
+      decisions: [
+        decision({ id: "d1", actionType: "loa-signature", outcome: "approved", itemId: "loa:a1" }),
+        decision({ id: "d2", actionType: "risk-acceptance", outcome: "accepted", itemId: "risk:S1:r1", reconciliationState: "reconciled" }), // already reconciled → excluded
+        decision({ id: "d3", actionType: "risk-acceptance", outcome: "accepted", itemId: "risk:S1:r1", engagementId: "other" }), // other engagement → excluded
+      ],
+      authorizations: [auth("a1")],
+      siteRecords: [site("S1", { code: "BR-1001", name: "Paris", risks: [{ id: "r1", title: "No diverse path", severity: "high", status: "open" }] })],
+    });
+    expect(items).toHaveLength(1);
+    expect(items[0].decision.id).toBe("d1");
+    expect(items[0].title).toContain("provider-gtt");
+    expect(items[0].effect.nextStatus).toBe("active");
+    expect(items[0].outcomeLabel).toBe("Signed");
   });
 });
