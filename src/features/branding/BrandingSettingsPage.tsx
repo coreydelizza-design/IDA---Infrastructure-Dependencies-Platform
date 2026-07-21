@@ -2,6 +2,7 @@ import { Maximize2, Moon, Palette, PanelRight, RotateCcw, Shield, Sun, Upload, X
 import { useRef, useState } from "react";
 import { useRegistry } from "../../application/registryContext";
 import { useInspectorLayout, type InspectorLayout } from "../../application/inspectorLayout";
+import { usePersona, PERSONA_LABELS, type Persona } from "../../application/persona";
 import { useTheme, type Theme } from "../../application/theme";
 import {
   MAX_LOGO_DATA_URL_LENGTH,
@@ -22,6 +23,10 @@ const LAYOUTS: Array<{ value: InspectorLayout; label: string; hint: string }> = 
   { value: "docked", label: "Docked", hint: "Inspector beside grid" },
   { value: "overlay", label: "Overlay", hint: "Grid stays full width" },
 ];
+const PERSONAS: Array<{ value: Persona; hint: string }> = [
+  { value: "consultant", hint: "Operate all projects" },
+  { value: "customer", hint: "Read + reporting" },
+];
 
 const MAX_KB = Math.round(MAX_LOGO_DATA_URL_LENGTH / 1024);
 
@@ -30,6 +35,7 @@ export function BrandingSettingsPage() {
   const { branding, brandingConfig, currentEnterprise, updateBranding, resetBranding, tier, setTier } = registry;
   const { theme, setTheme } = useTheme();
   const { layout, setLayout } = useInspectorLayout();
+  const { persona, setPersona } = usePersona();
   const fileRef = useRef<HTMLInputElement>(null);
   const [logoInput, setLogoInput] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -91,6 +97,28 @@ export function BrandingSettingsPage() {
           <RotateCcw size={13} /> Reset to neutral
         </button>
       </div>
+
+      <section className="tier-panel">
+        <div className="tier-panel-head">
+          <span className="eyebrow">View as</span>
+          <p>Preview the portal as a consultant (operates all projects) or as the customer (read + reporting, scoped to their engagement). Simulates access until sign-in is wired; the persona drives the home screen and available tools.</p>
+        </div>
+        <div className="tier-toggle" role="radiogroup" aria-label="View as persona">
+          {PERSONAS.map((p) => (
+            <button
+              key={p.value}
+              type="button"
+              role="radio"
+              aria-checked={persona === p.value}
+              className={persona === p.value ? "active" : ""}
+              onClick={() => setPersona(p.value)}
+            >
+              <strong>{PERSONA_LABELS[p.value]}</strong>
+              <small>{p.hint}</small>
+            </button>
+          ))}
+        </div>
+      </section>
 
       <section className="tier-panel">
         <div className="tier-panel-head">

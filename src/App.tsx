@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { RegistryProvider } from "./application/registryContext";
 import { useInspectorLayout } from "./application/inspectorLayout";
+import { usePersona } from "./application/persona";
 import { useRegistryState, type WorkspacePage } from "./application/useRegistryState";
+import { ProjectInventoryPage } from "./features/projects/ProjectInventoryPage";
 import { SiteIntakeModal } from "./components/intake/SiteIntakeModal";
 import type { SiteRecord } from "./domain";
 import { AppFooter } from "./components/AppFooter";
@@ -18,6 +20,7 @@ import { RegulatoryExportPage } from "./features/reports/RegulatoryExportPage";
 import { BrandingSettingsPage } from "./features/branding/BrandingSettingsPage";
 
 const pageTitles: Record<WorkspacePage, string> = {
+  projects: "Projects",
   sites: "Sites",
   dashboard: "Dashboard",
   "critical-services": "Critical Services",
@@ -54,11 +57,13 @@ export default function App() {
 function AppShell() {
   const registry = useRegistryState();
   const { layout: inspectorLayout } = useInspectorLayout();
+  const { capabilities } = usePersona();
   const [intake, setIntake] = useState<{ open: boolean; mode: "create" | "edit"; editingSite: SiteRecord | null }>({ open: false, mode: "create", editingSite: null });
 
   const openCreate = () => setIntake({ open: true, mode: "create", editingSite: null });
   const openEdit = (siteId: string) => setIntake({ open: true, mode: "edit", editingSite: registry.siteRecords.find((s) => s.id === siteId) ?? null });
   const closeIntake = () => setIntake((s) => ({ ...s, open: false }));
+  const openProject = (engagementId: string) => { registry.selectProject(engagementId); registry.setActivePage("sites"); };
 
   // Uniformly scale the locked 1672x941 console to fit the viewport while
   // preserving its exact aspect ratio (see docs/UI_LOCK.md). At the canonical
@@ -81,7 +86,9 @@ function AppShell() {
   }, []);
 
   const pageGated = !registry.isPageAvailable(registry.activePage);
-  const showSiteWorkspace = registry.activePage === "sites" && !pageGated;
+  // Consultant-only Project Inventory; a customer landing here is redirected to the registry.
+  const showProjects = registry.activePage === "projects" && capabilities.canSeeAllProjects;
+  const showSiteWorkspace = (registry.activePage === "sites" || (registry.activePage === "projects" && !capabilities.canSeeAllProjects)) && !pageGated;
 
   return (
     <div className="app-shell">
@@ -94,7 +101,9 @@ function AppShell() {
       <Sidebar activePage={registry.activePage} onNavigate={registry.setActivePage} />
 
       <div className={`workspace ${showSiteWorkspace && registry.detailsOpen ? "with-detail" : "without-detail"}${showSiteWorkspace && registry.detailsOpen && inspectorLayout === "overlay" ? " overlay-inspector" : ""}`}>
-        {showSiteWorkspace ? (
+        {showProjects ? (
+          <ProjectInventoryPage onOpenProject={openProject} />
+        ) : showSiteWorkspace ? (
           <>
             <SiteInventoryPage
               allSites={registry.sites}
@@ -115,7 +124,7 @@ function AppShell() {
               onViewChange={registry.changeView}
               onSelectSite={registry.selectSite}
               onToggleFavorite={registry.toggleFavorite}
-              onAddSite={openCreate}
+              onAddSite={capabilities.canOperate ? openCreate : undefined}
             />
             {registry.detailsOpen && registry.selectedSite ? (
               <DetailPane

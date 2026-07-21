@@ -5,6 +5,8 @@ import type {
   CardCriticalService,
   ComplianceMapping,
   ControlResult,
+  Engagement,
+  EnterpriseClient,
   EvidenceBadge,
   EvidenceConfidence,
   HealthBand,
@@ -349,6 +351,23 @@ function providersFromSites(sites: SiteRecord[]): Provider[] {
   return [...seen.values()];
 }
 
+// Additional demo enterprises + engagements so the consultant's Project
+// Inventory shows a realistic portfolio at different lifecycle stages. The
+// canonical Enterprise Co. / ENG-2026-001 project (with the seeded sites and the
+// locked branding) remains the primary; these carry no sites yet.
+export const DEMO_ENTERPRISES: EnterpriseClient[] = [
+  { id: "ent-northwind", consultancyOrganizationId: ORG_ID, name: "Northwind Trading", legalName: "Northwind Trading Group Ltd", industry: "Capital Markets", headquartersCountry: "US", status: "active", externalReference: "CRM-5107", createdAt: NOW, updatedAt: NOW },
+  { id: "ent-meridian", consultancyOrganizationId: ORG_ID, name: "Meridian Health", legalName: "Meridian Health Systems Inc", industry: "Healthcare", headquartersCountry: "US", status: "active", externalReference: "CRM-4990", createdAt: NOW, updatedAt: NOW },
+  { id: "ent-atlas", consultancyOrganizationId: ORG_ID, name: "Atlas Logistics", legalName: "Atlas Logistics International GmbH", industry: "Logistics", headquartersCountry: "DE", status: "active", externalReference: "CRM-5233", createdAt: NOW, updatedAt: NOW },
+];
+
+export const DEMO_ENGAGEMENTS: Engagement[] = [
+  { id: "eng-2026-014", consultancyOrganizationId: ORG_ID, enterpriseClientId: ENTERPRISE_ID, name: "Disaster Recovery Site Review", code: "ENG-2026-014", description: "Point-in-time review of DR site dependencies and failover readiness.", status: "scoping", scopeStatement: "12 disaster-recovery and standby sites; power, connectivity, and recovery dependencies.", startDate: "2026-06-01", targetCompletionDate: "2026-11-30", reviewCadence: "one-time", leadConsultantUserId: "user-engagement-lead", createdAt: NOW, updatedAt: NOW },
+  { id: "eng-2026-022", consultancyOrganizationId: ORG_ID, enterpriseClientId: "ent-northwind", name: "Trading Floor Resilience 2026", code: "ENG-2026-022", description: "Assurance of low-latency trading floor and exchange connectivity.", status: "assessment", scopeStatement: "6 trading floors and 3 exchange access points; carrier diversity and latency-path evidence.", startDate: "2026-03-10", targetCompletionDate: "2026-08-15", reviewCadence: "quarterly", leadConsultantUserId: "user-engagement-lead", createdAt: NOW, updatedAt: NOW },
+  { id: "eng-2026-031", consultancyOrganizationId: ORG_ID, enterpriseClientId: "ent-meridian", name: "Data Center Consolidation Assurance", code: "ENG-2026-031", description: "Dependency assurance across a data-center consolidation programme.", status: "periodic-review", scopeStatement: "4 core data centers and 40 clinical sites; facility, power, and clinical-system dependencies.", startDate: "2025-10-01", targetCompletionDate: "2026-07-31", reviewCadence: "semi-annual", leadConsultantUserId: "user-engagement-lead", createdAt: NOW, updatedAt: NOW },
+  { id: "eng-2026-040", consultancyOrganizationId: ORG_ID, enterpriseClientId: "ent-atlas", name: "Edge Network Baseline", code: "ENG-2026-040", description: "Baseline dependency registry for distribution-center edge sites.", status: "published", scopeStatement: "58 distribution-center edge sites; connectivity and wireless-failover dependencies.", startDate: "2025-09-15", targetCompletionDate: "2026-04-30", reviewCadence: "annual", leadConsultantUserId: "user-engagement-lead", createdAt: NOW, updatedAt: NOW },
+];
+
 export function buildSeedDataset(): RegistryDataset {
   const sites = siteSpecs.map(buildSite);
   const { controlResults, snapshots } = assessmentArtifacts(sites);
@@ -361,9 +380,11 @@ export function buildSeedDataset(): RegistryDataset {
       // the default render is pixel-identical to the visual baseline (see
       // docs/UI_LOCK.md). White-label branding is purely additive on top of this.
       { id: ENTERPRISE_ID, consultancyOrganizationId: ORG_ID, name: "Enterprise Co.", legalName: "Enterprise Co. PLC", industry: "Financial Services", headquartersCountry: "UK", status: "active", externalReference: "CRM-4821", branding: { brandName: "ResiliLink", productLabel: "Site Resiliency Registry", logoUrl: null, logoAlt: "" }, createdAt: NOW, updatedAt: NOW },
+      ...DEMO_ENTERPRISES,
     ],
     engagements: [
       { id: ENGAGEMENT_ID, consultancyOrganizationId: ORG_ID, enterpriseClientId: ENTERPRISE_ID, name: "Global Infrastructure Assurance 2026", code: "ENG-2026-001", description: "Point-in-time dependency assurance across the global estate.", status: "data-collection", scopeStatement: "128 sites across 23 countries; carrier, circuit, facility, cloud, and service dependencies.", startDate: "2026-01-05", targetCompletionDate: "2026-09-30", reviewCadence: "quarterly", leadConsultantUserId: "user-engagement-lead", createdAt: NOW, updatedAt: NOW },
+      ...DEMO_ENGAGEMENTS,
     ],
     engagementMembers: [
       { id: "mem-1", engagementId: ENGAGEMENT_ID, userId: "user-engagement-lead", role: "engagement-lead", status: "active", joinedAt: NOW },

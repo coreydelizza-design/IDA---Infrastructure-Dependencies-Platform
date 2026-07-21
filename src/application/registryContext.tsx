@@ -13,11 +13,12 @@ import type {
   EnterpriseAuthorizationSummary,
   EnterpriseClient,
   PortfolioSummary,
+  ProjectSummary,
   ResolvedBranding,
   Site,
   SiteRecord,
 } from "../domain";
-import { EMPTY_BRANDING, isPageAvailable as tierPageAvailable, presentSite, resolveBranding, resolveTier } from "../domain";
+import { buildProjectSummaries, EMPTY_BRANDING, isPageAvailable as tierPageAvailable, presentSite, resolveBranding, resolveTier } from "../domain";
 
 /** Fixed portfolio summary for the full estate (preserves the approved KPI strip). */
 export const canonicalPortfolioSummary: PortfolioSummary = {
@@ -40,6 +41,10 @@ interface RegistryContextValue {
   engagements: Engagement[];
   currentEnterprise: EnterpriseClient | null;
   currentEngagement: Engagement | null;
+  /** All projects (engagements) across enterprises — the consultant's portfolio. */
+  projects: ProjectSummary[];
+  /** Enter a project: selects its enterprise + engagement in one step. */
+  selectProject: (engagementId: string) => void;
   /** Display-ready branding for the current enterprise (neutral defaults filled). */
   branding: ResolvedBranding;
   /** Raw stored branding for the current enterprise (empty strings = defaults). */
@@ -215,6 +220,21 @@ export function RegistryProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const projects = useMemo<ProjectSummary[]>(
+    () => buildProjectSummaries({ engagements: dataset.engagements, enterprises: dataset.enterpriseClients, sites: dataset.sites }),
+    [dataset],
+  );
+
+  const selectProject = useCallback(
+    (engagementId: string) => {
+      const engagement = dataset.engagements.find((e) => e.id === engagementId);
+      if (!engagement) return;
+      setSelection({ enterpriseId: engagement.enterpriseClientId, engagementId });
+      persistSelection(engagement.enterpriseClientId, engagementId);
+    },
+    [dataset],
+  );
+
   const resetDemoData = useCallback(() => {
     store.resetDemoData();
     store.initialize(buildSeedDataset);
@@ -230,6 +250,8 @@ export function RegistryProvider({ children }: { children: ReactNode }) {
     engagements,
     currentEnterprise,
     currentEngagement,
+    projects,
+    selectProject,
     branding,
     brandingConfig,
     updateBranding,
