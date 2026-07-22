@@ -34,15 +34,22 @@ describe("inspectorLayout", () => {
     expect(readStoredInspectorLayout()).toBe("overlay");
   });
 
+  it("reads a stored fullscreen preference", () => {
+    stubStore({ "ida.inspectorLayout": "fullscreen" });
+    expect(readStoredInspectorLayout()).toBe("fullscreen");
+  });
+
   it("treats any unknown value as docked", () => {
     stubStore({ "ida.inspectorLayout": "floating" });
     expect(readStoredInspectorLayout()).toBe("docked");
   });
 
-  it("persists the layout when set", () => {
+  it("persists each layout when set", () => {
     const store = stubStore();
     setInspectorLayout("overlay");
     expect(store.get("ida.inspectorLayout")).toBe("overlay");
+    setInspectorLayout("fullscreen");
+    expect(store.get("ida.inspectorLayout")).toBe("fullscreen");
     setInspectorLayout("docked");
     expect(store.get("ida.inspectorLayout")).toBe("docked");
   });

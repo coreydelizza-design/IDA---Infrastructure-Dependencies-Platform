@@ -23,7 +23,7 @@ triage which sites need attention without opening the full inspector.
 - Only rendered when the card advertises open risks; "No open risks" cards are
   untouched.
 
-## B. Inspector layout — Docked (default) / Overlay (opt-in)
+## B. Inspector layout — Docked (default) / Overlay / Fullscreen (opt-in)
 
 `src/application/inspectorLayout.ts` — a per-viewer preference (`localStorage`
 `ida.inspectorLayout`, default `docked`), toggled at **Administration → Site
@@ -39,10 +39,22 @@ inventory layout**.
   (--detail-pane-width + 28px))`), so the floating pane **never covers a card** —
   every card and the summary strip stay fully visible beside it. Opening a site
   never compresses the grid.
+- **Fullscreen** — selecting a site projects it as a **large, readable card**
+  centred over the whole viewport (`src/components/FullscreenSiteCard.tsx`).
+  Because the console scales the entire `.app-shell` down to fit the device
+  (`--ui-scale`), card text shrinks on smaller displays; the fullscreen card is
+  rendered via a **React portal to `document.body` — OUTSIDE the scaled, clipped
+  `.app-shell`** — so it displays at true pixel size and stays legible. It shows
+  the site at a glance (score ring, assurance, carriers/dependencies/critical
+  risks/services-assured, resilience indicators, and open risks) with
+  Prev/Next paging (← →), Esc/close, and a dimmed backdrop. Read-only; no
+  operator affordances. The grid behind keeps its full width (the projection
+  reserves no space).
 
-Implemented purely as `.workspace.overlay-inspector` CSS overrides (App.tsx adds
-the class only when the preference is overlay and the inspector is open), so
-docked output is untouched.
+Overlay is implemented purely as `.workspace.overlay-inspector` CSS overrides;
+fullscreen renders the portal instead of the docked/overlay pane. App.tsx only
+switches behavior when the preference is non-default, so **docked output is
+untouched** and the locked baseline is unchanged.
 
 ## Lock compliance
 

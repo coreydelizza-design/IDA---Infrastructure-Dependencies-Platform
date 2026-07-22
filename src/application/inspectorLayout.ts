@@ -1,15 +1,17 @@
-// Inspector layout (docked / overlay).
+// Inspector layout (docked / overlay / fullscreen).
 //
 // The approved, locked Site Inventory (docs/UI_LOCK.md) DOCKS the detail
 // inspector beside the card grid, which reflows the grid to the canonical
 // three-column state. "overlay" is an opt-in per-viewer preference: the grid
 // keeps its full width and the inspector floats over the right edge, so opening
-// a site never compresses the cards. Default is "docked" so the baseline render
-// is unchanged.
+// a site never compresses the cards. "fullscreen" projects the selected site as
+// a large, readable card centred over the whole viewport — rendered OUTSIDE the
+// scaled `.app-shell` (via a portal) so its text is legible regardless of the
+// device down-scale. Default is "docked" so the baseline render is unchanged.
 
 import { useCallback, useSyncExternalStore } from "react";
 
-export type InspectorLayout = "docked" | "overlay";
+export type InspectorLayout = "docked" | "overlay" | "fullscreen";
 
 const STORAGE_KEY = "ida.inspectorLayout";
 export const DEFAULT_INSPECTOR_LAYOUT: InspectorLayout = "docked";
@@ -17,7 +19,7 @@ export const DEFAULT_INSPECTOR_LAYOUT: InspectorLayout = "docked";
 export function readStoredInspectorLayout(): InspectorLayout {
   try {
     const v = typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY) : null;
-    return v === "overlay" ? "overlay" : "docked";
+    return v === "overlay" || v === "fullscreen" ? v : "docked";
   } catch {
     return DEFAULT_INSPECTOR_LAYOUT;
   }
