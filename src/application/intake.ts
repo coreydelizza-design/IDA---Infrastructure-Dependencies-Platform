@@ -19,7 +19,7 @@ import type {
   Scale5,
   SiteRecord,
 } from "../domain";
-import { computeResilienceScore } from "../domain";
+import { computeResilienceScore, defaultWorkloadsForArchetype, isWorkloadId } from "../domain";
 
 // --- Controlled option lists (also used by the wizard UI) -------------------
 
@@ -116,6 +116,8 @@ export interface IntakeForm {
   // Step 2 — business context
   businessRoles: string;
   networkRoles: string;
+  /** Workload / network-traffic categories the site carries (WorkloadId[]). */
+  workloads: string[];
   consultantOwnerId: string;
   enterpriseOwnerContactId: string;
   reviewCadence: string;
@@ -160,7 +162,7 @@ export function emptyIntakeForm(): IntakeForm {
     address: "", city: "", stateProvince: "", postalCode: "", countryCode: "", countryName: "",
     timezone: "", ownershipModel: "unknown", occupancyModel: "unknown", operatingHours: "",
     userCount: "", endpointCount: "",
-    businessRoles: "", networkRoles: "", consultantOwnerId: "user-consultant-1", enterpriseOwnerContactId: "",
+    businessRoles: "", networkRoles: "", workloads: defaultWorkloadsForArchetype("Branch Office"), consultantOwnerId: "user-consultant-1", enterpriseOwnerContactId: "",
     reviewCadence: "quarterly", businessCriticality: 3, operationalDependency: 3, safetyImpact: 1,
     regulatoryScope: "", rtoMinutes: "", rpoMinutes: "", mtoMinutes: "", singleSiteApproved: false,
     circuits: [], components: [], dependencies: [], evidence: [], gapDispositions: {},
@@ -376,6 +378,7 @@ export function buildIntakeRecords(form: IntakeForm, ctx: IntakeContext): Intake
     secondaryLocationTypes: [],
     businessRoles: form.businessRoles ? form.businessRoles.split(",").map((s) => s.trim()).filter(Boolean) : [],
     networkRoles: form.networkRoles ? form.networkRoles.split(",").map((s) => s.trim()).filter(Boolean) : [],
+    workloads: form.workloads.filter(isWorkloadId),
     address: form.address.trim() || "Not yet provided",
     city: form.city.trim(),
     stateProvince: form.stateProvince.trim(),
@@ -478,6 +481,7 @@ export function formFromSite(site: SiteRecord): IntakeForm {
     endpointCount: site.endpointCount?.toString() ?? "",
     businessRoles: site.businessRoles.join(", "),
     networkRoles: site.networkRoles.join(", "),
+    workloads: site.workloads ?? [],
     consultantOwnerId: site.consultantOwnerId ?? "",
     enterpriseOwnerContactId: site.enterpriseOwnerContactId ?? "",
     businessCriticality: site.businessCriticality,

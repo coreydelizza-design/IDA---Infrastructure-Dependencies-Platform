@@ -6,6 +6,7 @@ export * from "./projects";
 export * from "./dashboard";
 export * from "./contracts";
 export * from "./governance";
+export * from "./workloads";
 export * from "./engagements";
 export * from "./contacts";
 export * from "./providers";

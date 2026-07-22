@@ -15,7 +15,7 @@ function engagement(id: string, enterpriseClientId: string, status: Engagement["
 function site(id: string, engagementId: string, over: Partial<SiteRecord> = {}): SiteRecord {
   return {
     id, tenantId: "t", enterpriseClientId: "e", engagementId, code: id, name: id, archetypeId: "a", primaryLocationType: "x",
-    secondaryLocationTypes: [], businessRoles: [], networkRoles: [], address: "", city: "", stateProvince: "", postalCode: "",
+    secondaryLocationTypes: [], businessRoles: [], networkRoles: [], workloads: [], address: "", city: "", stateProvince: "", postalCode: "",
     countryCode: "US", countryName: "US", latitude: null, longitude: null, timezone: "", ownershipModel: "unknown", occupancyModel: "unknown",
     operatingHours: "24x7", userCount: null, endpointCount: null, businessCriticality: 4, operationalDependency: 4, safetyImpact: 1,
     regulatoryScope: [], registryState: "consultant-verified", assessmentStatus: "published", completenessPercent: 100, lastVerifiedAt: NOW,
