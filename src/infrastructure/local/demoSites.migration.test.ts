@@ -58,3 +58,23 @@ describe("demo-portfolio v6 migration", () => {
     expect(migrated.sites.filter((s) => s.id === DEMO_SITES[0].id)).toHaveLength(1);
   });
 });
+
+describe("workloads v7 migration", () => {
+  it("backfills workloads: canonical sites empty, demo sites get their presets", () => {
+    const storage = createMemoryStorage();
+    // Simulate a v6 install where sites have no workloads field.
+    const data = buildSeedDataset();
+    for (const s of data.sites) delete (s as { workloads?: unknown }).workloads;
+    storage.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 6, data }));
+
+    const migrated = new LocalStore(storage).initialize(buildSeedDataset);
+
+    for (const s of migrated.sites) expect(Array.isArray(s.workloads)).toBe(true);
+    // Canonical London stays empty; a demo site gets its preset back.
+    expect(migrated.sites.find((s) => s.id === "site-dc1-london")?.workloads).toEqual([]);
+    const demo = DEMO_SITES[0];
+    expect(migrated.sites.find((s) => s.id === demo.id)?.workloads).toEqual(demo.workloads);
+    expect(demo.workloads.length).toBeGreaterThan(0);
+    expect(JSON.parse(storage.getItem(STORAGE_KEY)!).schemaVersion).toBe(SCHEMA_VERSION);
+  });
+});

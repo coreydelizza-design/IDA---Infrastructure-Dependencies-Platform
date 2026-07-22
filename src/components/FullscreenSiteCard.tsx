@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import type { ResilienceIndicator, ServiceAssuranceState, Site } from "../domain";
+import { workloadLabel } from "../domain";
 import { ScoreRing } from "./ScoreRing";
 import { StatusBadge } from "./StatusBadge";
 
@@ -133,6 +134,15 @@ export function FullscreenSiteCard({ site, sites, onSelectSite, onClose }: Fulls
               )}
             </section>
           </div>
+
+          {site.workloads.length > 0 ? (
+            <section className="fs-section fs-workloads">
+              <h3>Workloads</h3>
+              <div className="fs-workload-tags">
+                {site.workloads.map((id) => <span key={id} className="workload-tag">{workloadLabel(id)}</span>)}
+              </div>
+            </section>
+          ) : null}
         </div>
 
         {canPage ? (

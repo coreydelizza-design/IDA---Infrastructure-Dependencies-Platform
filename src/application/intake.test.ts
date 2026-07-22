@@ -31,6 +31,21 @@ function baseForm() {
   return form;
 }
 
+describe("workloads", () => {
+  it("seeds the default archetype's workload preset on a blank form", () => {
+    const form = emptyIntakeForm();
+    expect(form.archetype).toBe("Branch Office");
+    expect(form.workloads).toContain("pos-store");
+  });
+
+  it("carries workloads onto the site record, filtering unknown ids", () => {
+    const form = baseForm();
+    form.workloads = ["voice", "payment", "not-a-workload"];
+    const out = buildIntakeRecords(form, ctx);
+    expect(out.site.workloads).toEqual(["voice", "payment"]);
+  });
+});
+
 describe("buildIntakeRecords", () => {
   it("creates a carrier data gap for an unknown circuit and no circuit record", () => {
     const form = baseForm();

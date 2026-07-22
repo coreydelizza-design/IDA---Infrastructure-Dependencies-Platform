@@ -23,7 +23,15 @@ import {
   type IntakeForm,
 } from "../../application/intake";
 import type { AuditEvent, Scale5, SiteRecord } from "../../domain";
+import { WORKLOADS, WORKLOAD_CATEGORIES, defaultWorkloadsForArchetype } from "../../domain";
 import { Field, LabeledSlider, ProviderSelect, RepeatableSection, type ProviderOption } from "./controls";
+
+/** Set/replace a value on a set of ids, treating the arrays as sets. */
+function sameSet(a: readonly string[], b: readonly string[]): boolean {
+  if (a.length !== b.length) return false;
+  const s = new Set(a);
+  return b.every((x) => s.has(x));
+}
 
 interface SiteIntakeModalProps {
   open: boolean;
@@ -56,6 +64,15 @@ export function SiteIntakeModal({ open, mode, editingSite, onClose, onComplete }
   }, [open, mode, editingSite, registry.repositories]);
 
   const set = <K extends keyof IntakeForm>(key: K, value: IntakeForm[K]) => setForm((f) => ({ ...f, [key]: value }));
+
+  // Changing the archetype re-seeds the workload presets, but only when the
+  // consultant has not customised the selection (empty, or still the previous
+  // archetype's preset) — so manual edits are never clobbered.
+  const setArchetype = (archetype: string) =>
+    setForm((f) => {
+      const untouched = f.workloads.length === 0 || sameSet(f.workloads, defaultWorkloadsForArchetype(f.archetype));
+      return { ...f, archetype, workloads: untouched ? defaultWorkloadsForArchetype(archetype) : f.workloads };
+    });
 
   const preview = useMemo(() => {
     if (!open) return null;
@@ -121,7 +138,7 @@ export function SiteIntakeModal({ open, mode, editingSite, onClose, onComplete }
         </ol>
 
         <div className="intake-body">
-          {step === 0 ? <IdentityStep form={form} set={set} /> : null}
+          {step === 0 ? <IdentityStep form={form} set={set} onArchetype={setArchetype} /> : null}
           {step === 1 ? <BusinessStep form={form} set={set} /> : null}
           {step === 2 ? <ConnectivityStep form={form} set={set} providers={providers} /> : null}
           {step === 3 ? <ComponentsStep form={form} set={set} /> : null}
@@ -149,12 +166,12 @@ export function SiteIntakeModal({ open, mode, editingSite, onClose, onComplete }
 
 type SetFn = <K extends keyof IntakeForm>(key: K, value: IntakeForm[K]) => void;
 
-function IdentityStep({ form, set }: { form: IntakeForm; set: SetFn }) {
+function IdentityStep({ form, set, onArchetype }: { form: IntakeForm; set: SetFn; onArchetype: (a: string) => void }) {
   return (
     <div className="form-grid">
       <Field label="Site code"><input value={form.code} onChange={(e) => set("code", e.target.value)} placeholder="BR-1002" /></Field>
       <Field label="Site name"><input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Berlin" /></Field>
-      <Field label="Archetype" wide><select value={form.archetype} onChange={(e) => set("archetype", e.target.value)}>{ARCHETYPES.map((a) => <option key={a}>{a}</option>)}</select></Field>
+      <Field label="Archetype" wide><select value={form.archetype} onChange={(e) => onArchetype(e.target.value)}>{ARCHETYPES.map((a) => <option key={a}>{a}</option>)}</select></Field>
       <Field label="Primary location type"><input value={form.primaryLocationType} onChange={(e) => set("primaryLocationType", e.target.value)} /></Field>
       <Field label="Timezone (Unknown if blank)"><input value={form.timezone} onChange={(e) => set("timezone", e.target.value)} placeholder="CET (UTC+1)" /></Field>
       <Field label="Address (Unknown if blank)" wide><input value={form.address} onChange={(e) => set("address", e.target.value)} /></Field>
@@ -172,8 +189,51 @@ function IdentityStep({ form, set }: { form: IntakeForm; set: SetFn }) {
   );
 }
 
+function WorkloadPicker({ form, set }: { form: IntakeForm; set: SetFn }) {
+  const selected = new Set(form.workloads);
+  const toggle = (id: string) =>
+    set("workloads", selected.has(id) ? form.workloads.filter((w) => w !== id) : [...form.workloads, id]);
+  const preset = defaultWorkloadsForArchetype(form.archetype);
+  return (
+    <div className="workload-picker">
+      <div className="workload-picker-head">
+        <div>
+          <span className="workload-picker-title">Workloads at this site</span>
+          <small>{form.workloads.length} selected · the network traffic this location carries</small>
+        </div>
+        {preset.length > 0 ? (
+          <button type="button" className="ghost-button" onClick={() => set("workloads", preset)}>Apply {form.archetype} preset</button>
+        ) : null}
+      </div>
+      <div className="workload-groups">
+        {WORKLOAD_CATEGORIES.map((cat) => (
+          <div key={cat.id} className="workload-group">
+            <span className="workload-group-label">{cat.label}</span>
+            <div className="workload-chips">
+              {WORKLOADS.filter((w) => w.category === cat.id).map((w) => (
+                <button
+                  key={w.id}
+                  type="button"
+                  role="checkbox"
+                  aria-checked={selected.has(w.id)}
+                  className={`workload-chip${selected.has(w.id) ? " on" : ""}`}
+                  onClick={() => toggle(w.id)}
+                >
+                  {w.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function BusinessStep({ form, set }: { form: IntakeForm; set: SetFn }) {
   return (
+    <>
+    <WorkloadPicker form={form} set={set} />
     <div className="intake-two-col">
       <div className="form-grid">
         <Field label="Business roles (comma-separated)" wide><input value={form.businessRoles} onChange={(e) => set("businessRoles", e.target.value)} placeholder="branch operations, sales" /></Field>
@@ -191,6 +251,7 @@ function BusinessStep({ form, set }: { form: IntakeForm; set: SetFn }) {
         <LabeledSlider label="Safety impact" value={form.safetyImpact} labels={SLIDER_SCALES.safetyImpact} onChange={(v) => set("safetyImpact", v)} />
       </div>
     </div>
+    </>
   );
 }
 

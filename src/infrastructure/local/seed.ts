@@ -101,6 +101,8 @@ interface SiteSpec {
   nextReviewAt: string;
   indicators?: ResilienceIndicator[];
   tags: string[];
+  /** Workload / network-traffic categories (WorkloadId[]); defaults to none. */
+  workloads?: string[];
 }
 
 function buildSite(spec: SiteSpec): SiteRecord {
@@ -124,6 +126,7 @@ function buildSite(spec: SiteSpec): SiteRecord {
     secondaryLocationTypes: [],
     businessRoles: [],
     networkRoles: [],
+    workloads: spec.workloads ?? [],
     address: spec.address,
     city: spec.city,
     stateProvince: spec.stateProvince,
@@ -512,9 +515,26 @@ const demoSiteSpecs: SiteSpec[] = [
   },
 ];
 
+// Representative workloads per demo archetype (some demo archetypes are bespoke
+// and not in ARCHETYPE_WORKLOAD_PRESETS, so map them here) — so every demo site
+// opens with a realistic workload set.
+const DEMO_WORKLOADS: Record<string, string[]> = {
+  "Recovery Data Center": ["backup-dr", "dc-compute", "storage-replication", "cloud-connectivity"],
+  "Standby Site": ["backup-dr", "user-internet", "remote-access"],
+  "Regional Office": ["core-business-app", "voice", "video-uc", "user-internet"],
+  "Financial Trading Floor": ["trading", "voice", "core-banking", "user-internet"],
+  "Exchange Access Point": ["trading", "cloud-connectivity", "network-management"],
+  "Primary Data Center": ["dc-compute", "backup-dr", "cloud-connectivity", "core-business-app", "ai-ml"],
+  "Secondary Data Center": ["dc-compute", "backup-dr", "storage-replication", "cloud-connectivity"],
+  "Clinical Facility": ["core-business-app", "physical-security", "voice", "bms", "user-internet"],
+  "Edge Site": ["wireless-failover", "iot-telemetry", "pos-store", "user-internet"],
+};
+
 /** Built demo-portfolio site records + their assessment artifacts, exported for
- *  the fresh-install seed and the v6 migration (injected by id if absent). */
-export const DEMO_SITES: SiteRecord[] = demoSiteSpecs.map(buildSite);
+ *  the fresh-install seed and the v6/v7 migrations (injected by id if absent). */
+export const DEMO_SITES: SiteRecord[] = demoSiteSpecs.map((s) =>
+  buildSite({ ...s, workloads: s.workloads ?? DEMO_WORKLOADS[s.archetype] ?? [] }),
+);
 export const DEMO_SITE_ARTIFACTS = assessmentArtifacts(DEMO_SITES);
 
 // Contract repository seed — MSAs and related instruments per enterprise client.
@@ -530,7 +550,9 @@ export const DEMO_CONTRACTS: Contract[] = [
 
 export function buildSeedDataset(): RegistryDataset {
   const canonicalSites = siteSpecs.map(buildSite);
-  const sites = [...canonicalSites, ...DEMO_SITES];
+  // Shallow-copy the pre-built demo sites so a caller mutating the returned
+  // dataset never corrupts the shared DEMO_SITES module state.
+  const sites = [...canonicalSites, ...DEMO_SITES.map((s) => ({ ...s }))];
   const { controlResults, snapshots } = assessmentArtifacts(sites);
   return {
     organizations: [

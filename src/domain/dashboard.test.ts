@@ -8,7 +8,7 @@ const NOW = "2026-07-21T00:00:00.000Z";
 function site(id: string, band: HealthBand, score: number, over: Partial<SiteRecord> = {}): SiteRecord {
   return {
     id, tenantId: "t", enterpriseClientId: "e", engagementId: "g", code: id, name: id, archetypeId: "a", primaryLocationType: "x",
-    secondaryLocationTypes: [], businessRoles: [], networkRoles: [], address: "", city: "City", stateProvince: "", postalCode: "",
+    secondaryLocationTypes: [], businessRoles: [], networkRoles: [], workloads: [], address: "", city: "City", stateProvince: "", postalCode: "",
     countryCode: "US", countryName: "US", latitude: null, longitude: null, timezone: "", ownershipModel: "unknown", occupancyModel: "unknown",
     operatingHours: "24x7", userCount: null, endpointCount: null, businessCriticality: 4, operationalDependency: 4, safetyImpact: 1,
     regulatoryScope: [], registryState: "consultant-verified", assessmentStatus: "published", completenessPercent: 100, lastVerifiedAt: NOW,

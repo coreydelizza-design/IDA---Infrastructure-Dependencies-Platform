@@ -92,6 +92,8 @@ export interface Site {
   name: string;
   type: string;
   locationType: string;
+  /** Workload / network-traffic categories the site carries (WorkloadId[]). */
+  workloads: string[];
   criticality: string;
   city: string;
   countryCode: string;

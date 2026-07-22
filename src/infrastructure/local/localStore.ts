@@ -81,7 +81,7 @@ export function resolveStorage(): StorageLike {
   return createMemoryStorage();
 }
 
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 const STORAGE_KEY = "ida.registry.v1";
 
 // v2 backfill: the canonical seeded enterprise carries explicit branding that
@@ -148,6 +148,17 @@ function migrate(envelope: PersistedEnvelope): PersistedEnvelope {
     const snapIds = new Set(current.data.assuranceSnapshots.map((s) => s.id));
     for (const s of DEMO_SITE_ARTIFACTS.snapshots) if (!snapIds.has(s.id)) current.data.assuranceSnapshots.push({ ...s });
     current.schemaVersion = 6;
+  }
+  if (current.schemaVersion < 7) {
+    // v7: site workloads. Backfill the `workloads` field (absent before v7) as an
+    // empty array so existing/canonical sites are unchanged, and restore the demo
+    // portfolio's workloads for demo sites that were injected by an earlier v6
+    // migration (before workloads existed).
+    const demoWorkloads = new Map(DEMO_SITES.map((s) => [s.id, s.workloads] as const));
+    for (const site of current.data.sites ?? []) {
+      if (!Array.isArray(site.workloads)) site.workloads = demoWorkloads.get(site.id) ?? [];
+    }
+    current.schemaVersion = 7;
   }
   return current;
 }

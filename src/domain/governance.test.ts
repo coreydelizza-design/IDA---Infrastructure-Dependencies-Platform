@@ -12,7 +12,7 @@ function site(id: string, over: Partial<SiteRecord> = {}): SiteRecord {
   const band: HealthBand = "good";
   return {
     id, tenantId: "t", enterpriseClientId: "e", engagementId: ENG, code: id, name: id, archetypeId: "a", primaryLocationType: "x",
-    secondaryLocationTypes: [], businessRoles: [], networkRoles: [], address: "", city: "City", stateProvince: "", postalCode: "",
+    secondaryLocationTypes: [], businessRoles: [], networkRoles: [], workloads: [], address: "", city: "City", stateProvince: "", postalCode: "",
     countryCode: "US", countryName: "US", latitude: null, longitude: null, timezone: "", ownershipModel: "unknown", occupancyModel: "unknown",
     operatingHours: "24x7", userCount: null, endpointCount: null, businessCriticality: 4, operationalDependency: 4, safetyImpact: 1,
     regulatoryScope: [], registryState: "consultant-verified", assessmentStatus: "published", completenessPercent: 100, lastVerifiedAt: NOW,

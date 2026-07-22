@@ -36,6 +36,8 @@ export interface SiteRecord {
   secondaryLocationTypes: string[];
   businessRoles: string[];
   networkRoles: string[];
+  /** Workload / network-traffic categories the site carries (WorkloadId[]). */
+  workloads: string[];
   address: string;
   city: string;
   stateProvince: string;
@@ -100,6 +102,7 @@ export function presentSite(record: SiteRecord): Site {
     name: record.name,
     type: record.archetypeId,
     locationType: record.primaryLocationType,
+    workloads: record.workloads ?? [],
     criticality: record.criticalityLabel,
     city: record.city,
     countryCode: record.countryCode,

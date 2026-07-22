@@ -16,6 +16,7 @@ import { useState } from "react";
 import type { DetailTab, RoleMode, Site } from "../domain/models";
 import type { ServiceAssuranceState } from "../domain/services";
 import { registryStateLabels } from "../domain/siteStates";
+import { workloadLabel } from "../domain/workloads";
 import { ScoreRing } from "./ScoreRing";
 
 const serviceAssuranceLabels: Record<ServiceAssuranceState, string> = {
@@ -144,6 +145,15 @@ function OverviewPanel({ site }: { site: Site }) {
           <button type="button" className="text-link">View all</button>
         </section>
       </div>
+
+      {site.workloads.length > 0 ? (
+        <section className="detail-info-card workloads-card">
+          <h4>Workloads <span>{site.workloads.length}</span></h4>
+          <div className="workload-tag-row">
+            {site.workloads.map((id) => <span key={id} className="workload-tag">{workloadLabel(id)}</span>)}
+          </div>
+        </section>
+      ) : null}
 
       <div className="overview-status-grid">
         <section className="detail-status-cell">
